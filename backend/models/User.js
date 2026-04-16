@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const strongPasswordMessage = 'Password must be at least 8 characters and include uppercase, lowercase, number, and special character';
+
 const userSchema = new mongoose.Schema(
   {
     firstName: {
@@ -26,7 +28,14 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, 'Password is required'],
-      minlength: [6, 'Password must be at least 6 characters'],
+      minlength: [8, strongPasswordMessage],
+      validate: {
+        validator: (value) => /[a-z]/.test(value)
+          && /[A-Z]/.test(value)
+          && /\d/.test(value)
+          && /[^A-Za-z0-9]/.test(value),
+        message: strongPasswordMessage,
+      },
       select: false,
     },
     fitnessGoal: {

@@ -5,6 +5,17 @@ const User = require('../models/User');
 
 const router = express.Router();
 
+const isStrongPassword = (password) => {
+  return (
+    typeof password === 'string' &&
+    password.length >= 8 &&
+    /[a-z]/.test(password) &&
+    /[A-Z]/.test(password) &&
+    /\d/.test(password) &&
+    /[^A-Za-z0-9]/.test(password)
+  );
+};
+
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
@@ -21,8 +32,8 @@ router.post(
     body('lastName').trim().notEmpty().withMessage('Last name is required'),
     body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
     body('password')
-      .isLength({ min: 6 })
-      .withMessage('Password must be at least 6 characters'),
+      .custom((value) => isStrongPassword(value))
+      .withMessage('Password must be at least 8 characters and include uppercase, lowercase, number, and special character'),
     body('fitnessGoal').optional().isIn([
       'weight_loss', 'muscle_gain', 'endurance', 'flexibility', 'general_fitness',
     ]),

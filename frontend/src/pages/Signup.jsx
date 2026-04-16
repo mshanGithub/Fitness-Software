@@ -23,6 +23,14 @@ const fitnessLevels = [
   { value: 'advanced', label: 'Advanced', emoji: '🏆', desc: 'Highly experienced' },
 ];
 
+const getPasswordChecks = (password) => ([
+  { label: 'At least 8 characters', passed: password.length >= 8 },
+  { label: 'One uppercase letter', passed: /[A-Z]/.test(password) },
+  { label: 'One lowercase letter', passed: /[a-z]/.test(password) },
+  { label: 'One number', passed: /\d/.test(password) },
+  { label: 'One special character', passed: /[^A-Za-z0-9]/.test(password) },
+]);
+
 const Signup = () => {
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
@@ -38,6 +46,8 @@ const Signup = () => {
 
   const { register } = useAuth();
   const navigate = useNavigate();
+  const passwordChecks = getPasswordChecks(form.password);
+  const isPasswordStrong = passwordChecks.every((check) => check.passed);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -53,7 +63,10 @@ const Signup = () => {
     if (!form.email.trim() || !/^\S+@\S+\.\S+$/.test(form.email)) {
       toast.error('Valid email is required'); return false;
     }
-    if (form.password.length < 6) { toast.error('Password must be at least 6 characters'); return false; }
+    if (!isPasswordStrong) {
+      toast.error('Password must be at least 8 characters and include uppercase, lowercase, number, and special character');
+      return false;
+    }
     return true;
   };
 
@@ -247,9 +260,10 @@ const Signup = () => {
                         name="password"
                         value={form.password}
                         onChange={handleChange}
-                        placeholder="Minimum 6 characters"
+                          placeholder="Create a strong password"
                         className="form-input"
                         autoComplete="new-password"
+                          minLength={8}
                       />
                       <button
                         type="button"
@@ -259,6 +273,21 @@ const Signup = () => {
                       >
                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
+                    </div>
+                    <div className="password-guidance">
+                      <span className={`password-strength ${isPasswordStrong ? 'strong' : 'weak'}`}>
+                        {isPasswordStrong ? 'Strong password' : 'Password requirements'}
+                      </span>
+                      <div className="password-checklist">
+                        {passwordChecks.map((check) => (
+                          <span
+                            key={check.label}
+                            className={`password-check ${check.passed ? 'passed' : ''}`}
+                          >
+                            {check.passed ? '✓' : '•'} {check.label}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
 

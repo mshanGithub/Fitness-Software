@@ -303,6 +303,42 @@
   color: var(--text);
 }
 
+.password-guidance {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.password-strength {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-sub);
+}
+
+.password-strength.strong {
+  color: var(--success);
+}
+
+.password-strength.weak {
+  color: var(--gold);
+}
+
+.password-checklist {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.password-check {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.password-check.passed {
+  color: var(--success);
+}
+
 .select-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
