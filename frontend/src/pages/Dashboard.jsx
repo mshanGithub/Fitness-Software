@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { userAPI } from '../services/api';
+import { userAPI, videoAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import {
   Flame, Zap, Trophy, TrendingUp, Calendar,
   Dumbbell, Activity, Target, Play, CheckCircle2,
-  BarChart3, Clock,
+  BarChart3, Clock, Youtube, X,
 } from 'lucide-react';
 import './Dashboard.css';
 
@@ -57,12 +57,24 @@ const Dashboard = () => {
   const [loggingWorkout, setLoggingWorkout] = useState(null);
   const [quote] = useState(() => motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [videos, setVideos] = useState([]);
+  const [activeVideo, setActiveVideo] = useState(null);
 
   useEffect(() => {
     refreshStats();
+    fetchVideos();
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, [refreshStats]);
+
+  const fetchVideos = async () => {
+    try {
+      const { data } = await videoAPI.getAll();
+      setVideos(data);
+    } catch {
+      // Videos are optional — fail silently
+    }
+  };
 
   const getGreeting = () => {
     const h = currentTime.getHours();
@@ -303,6 +315,98 @@ const Dashboard = () => {
             ))}
           </div>
         </motion.div>
+
+        {/* Workout Videos from Database */}
+        {videos.length > 0 && (
+          <motion.div className="dash-card" variants={cardVariants}>
+            <div className="card-header">
+              <h3 className="card-title">
+                <Youtube size={18} />
+                Workout Videos
+              </h3>
+              <span className="card-badge">{videos.length} videos</span>
+            </div>
+            <div className="video-grid">
+              {videos.map((video, i) => (
+                <motion.div
+                  key={video._id}
+                  className="video-card"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 + i * 0.08 }}
+                  whileHover={{ scale: 1.02, borderColor: 'rgba(126, 200, 200, 0.35)' }}
+                  onClick={() => setActiveVideo(video)}
+                >
+                  <div className="video-thumb-wrapper">
+                    <img
+                      className="video-thumb"
+                      src={`https://img.youtube.com/vi/${video.youtubeId}/mqdefault.jpg`}
+                      alt={video.title}
+                      loading="lazy"
+                    />
+                    <div className="video-play-overlay">
+                      <Play size={28} fill="#fff" />
+                    </div>
+                    {video.duration && (
+                      <span className="video-duration-badge">
+                        <Clock size={10} /> {video.duration}
+                      </span>
+                    )}
+                  </div>
+                  <div className="video-info">
+                    <h4 className="video-title">{video.title}</h4>
+                    {video.category && (
+                      <span className="video-category">{video.category}</span>
+                    )}
+                    {video.description && (
+                      <p className="video-desc">{video.description}</p>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Video Player Modal */}
+        <AnimatePresence>
+          {activeVideo && (
+            <motion.div
+              className="video-modal-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setActiveVideo(null)}
+            >
+              <motion.div
+                className="video-modal"
+                initial={{ scale: 0.85, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.85, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="video-modal-header">
+                  <h3 className="video-modal-title">{activeVideo.title}</h3>
+                  <button className="video-modal-close" onClick={() => setActiveVideo(null)}>
+                    <X size={20} />
+                  </button>
+                </div>
+                <div className="video-modal-player">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${activeVideo.youtubeId}?autoplay=1&rel=0`}
+                    title={activeVideo.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+                {activeVideo.description && (
+                  <p className="video-modal-desc">{activeVideo.description}</p>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Footer */}
         <motion.div className="dash-footer" variants={cardVariants}>

@@ -7,6 +7,7 @@ require('dotenv').config();
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
+const videoRoutes = require('./routes/videos');
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use('/api/', limiter);
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/videos', videoRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

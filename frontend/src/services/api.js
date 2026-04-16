@@ -46,4 +46,8 @@ export const userAPI = {
   logWorkout: (data) => api.post('/user/log-workout', data),
 };
 
+export const videoAPI = {
+  getAll: () => api.get('/videos'),
+};
+
 export default api;
