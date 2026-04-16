@@ -8,6 +8,7 @@ import {
   Dumbbell, Activity, Target, Play, CheckCircle2,
   BarChart3, Clock,
 } from 'lucide-react';
+import './Dashboard.css';
 
 const goalLabels = {
   weight_loss: 'Weight Loss 🔥',

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Dumbbell, LayoutDashboard, User, LogOut, Menu, X } from 'lucide-react';
+import './Navbar.css';
 
 const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();

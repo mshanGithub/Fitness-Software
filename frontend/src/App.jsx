@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import './App.css';
 import Navbar from './components/Navbar';
 import PrivateRoute from './components/PrivateRoute';
 import Login from './pages/Login';
@@ -30,13 +31,7 @@ function App() {
           position="top-right"
           toastOptions={{
             duration: 3500,
-            style: {
-              background: '#1A1A1A',
-              color: '#FFFFFF',
-              border: '1px solid #282828',
-              borderRadius: '10px',
-              fontSize: '0.875rem',
-            },
+            className: 'twc-toast',
             success: {
               iconTheme: { primary: '#E8522A', secondary: '#FFFFFF' },
             },

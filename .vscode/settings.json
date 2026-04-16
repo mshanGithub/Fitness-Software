@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/c1f3b5b5-74ec-45bd-bbf2-8a0b32e3a9aa/resourceGroups/appsvc_linux_westus2/providers/Microsoft.Web/sites/fitness-server",
+    "appService.deploySubpath": "backend"
+}

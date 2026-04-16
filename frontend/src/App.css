@@ -1,0 +1,81 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&display=swap');
+
+:root {
+  --primary: #7ec8c8;
+  --primary-light: #a8dede;
+  --primary-dark: #5aafaf;
+  --gold: #f5a623;
+  --coral: #e8522a;
+  --success: #4dd9ac;
+  --bg: #080c10;
+  --surface: #0d1117;
+  --card: #131b24;
+  --card-hover: #1c2535;
+  --border: rgba(126, 200, 200, 0.1);
+  --border-light: rgba(126, 200, 200, 0.22);
+  --text: #e8f4f4;
+  --text-sub: #8fa8b0;
+  --text-muted: #4e6470;
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-bg-md: rgba(13, 17, 23, 0.75);
+  --glass-border: rgba(126, 200, 200, 0.12);
+  --radius: 16px;
+  --radius-lg: 22px;
+  --shadow: 0 4px 32px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 48px rgba(126, 200, 200, 0.15);
+  --font-heading: 'Oswald', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --nav-h: 68px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  font-family: var(--font-body);
+  border: none;
+  background: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.twc-toast {
+  background: #1a1a1a;
+  color: #ffffff;
+  border: 1px solid #282828;
+  border-radius: 10px;
+  font-size: 0.875rem;
+}

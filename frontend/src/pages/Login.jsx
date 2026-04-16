@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Mail, Lock, Eye, EyeOff, Dumbbell, Zap } from 'lucide-react';
+import './Login.css';
 
 const floatingParticles = Array.from({ length: 12 }, (_, i) => i);
 

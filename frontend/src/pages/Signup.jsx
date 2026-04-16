@@ -7,6 +7,7 @@ import {
   Mail, Lock, Eye, EyeOff, User, Dumbbell, Zap,
   ChevronRight, ChevronLeft, Target, TrendingUp,
 } from 'lucide-react';
+import './Signup.css';
 
 const fitnessGoals = [
   { value: 'weight_loss', label: 'Weight Loss', emoji: '🔥', desc: 'Burn fat, feel energized' },
