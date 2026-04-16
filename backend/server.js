@@ -11,8 +11,7 @@ const videoRoutes = require('./routes/videos');
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+app.set('trust proxy', 1);
 
 // Rate limiting
 const limiter = rateLimit({
@@ -23,7 +22,7 @@ const limiter = rateLimit({
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: true,
   credentials: true,
 }));
 app.use(express.json({ limit: '10kb' }));
@@ -55,6 +54,25 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 TWC Fitness Server running on port ${PORT}`);
-});
+
+const startServer = async () => {
+  try {
+    await connectDB();
+
+    app.listen(PORT, () => {
+      console.log(`🚀 TWC Fitness Server running on port ${PORT}`);
+    }).on('error', (error) => {
+      if (error.code === 'EADDRINUSE') {
+        console.error(`❌ Port ${PORT} is already in use. Stop the existing process or change PORT.`);
+        process.exit(1);
+      }
+
+      throw error;
+    });
+  } catch (error) {
+    console.error(`❌ Server startup failed: ${error.message}`);
+    process.exit(1);
+  }
+};
+
+startServer();
