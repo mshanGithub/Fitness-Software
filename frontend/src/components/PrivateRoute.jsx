@@ -2,8 +2,8 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './PrivateRoute.css';
 
-const PrivateRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+const PrivateRoute = ({ children, allowedRoles, redirectTo = '/login' }) => {
+  const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
     return (
@@ -13,7 +13,15 @@ const PrivateRoute = ({ children }) => {
     );
   }
 
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  if (!isAuthenticated) {
+    return <Navigate to={redirectTo} replace />;
+  }
+
+  if (allowedRoles?.length && !allowedRoles.includes(user?.role)) {
+    return <Navigate to={user?.role === 'admin' ? '/admin/dashboard' : '/dashboard'} replace />;
+  }
+
+  return children;
 };
 
 export default PrivateRoute;

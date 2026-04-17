@@ -38,6 +38,11 @@ const userSchema = new mongoose.Schema(
       },
       select: false,
     },
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user',
+    },
     fitnessGoal: {
       type: String,
       enum: ['weight_loss', 'muscle_gain', 'endurance', 'flexibility', 'general_fitness'],

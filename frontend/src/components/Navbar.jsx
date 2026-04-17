@@ -2,24 +2,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Dumbbell, LayoutDashboard, User, LogOut, Menu, X } from 'lucide-react';
+import { Dumbbell, LayoutDashboard, LogOut, Menu, ShieldCheck, X } from 'lucide-react';
 import './Navbar.css';
 
 const Navbar = () => {
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate(isAdmin ? '/admin-twc-login' : '/login');
   };
 
-  const navLinks = [
-    { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
-    { label: 'Profile', path: '/profile', icon: <User size={18} /> },
-  ];
+  const navLinks = isAdmin
+    ? [{ label: 'Admin Dashboard', path: '/admin/dashboard', icon: <ShieldCheck size={18} /> }]
+    : [{ label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> }];
 
   if (!isAuthenticated) return null;
 
@@ -34,7 +33,7 @@ const Navbar = () => {
         {/* Logo */}
         <motion.div
           className="navbar-logo"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate(isAdmin ? '/admin/dashboard' : '/dashboard')}
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.97 }}
         >
@@ -62,7 +61,7 @@ const Navbar = () => {
         {/* User + Logout */}
         <div className="navbar-right desktop-only">
           <span className="nav-welcome">
-            Hey, <strong>{user?.firstName}</strong> 👋
+            {isAdmin ? 'Admin' : 'Hey'}, <strong>{user?.firstName}</strong>
           </span>
           <motion.button
             className="btn-logout"

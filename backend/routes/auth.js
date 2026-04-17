@@ -40,6 +40,11 @@ const isMailAuthError = (error) => {
   );
 };
 
+const buildAuthResponse = (user) => ({
+  token: generateToken(user._id),
+  user: user.toPublicJSON(),
+});
+
 // @route  POST /api/auth/register
 // @desc   Register a new user
 // @access Public
@@ -116,6 +121,10 @@ router.post(
         return res.status(401).json({ message: 'Invalid email or password' });
       }
 
+      if (user.role === 'admin') {
+        return res.status(403).json({ message: 'Use the admin login portal for this account' });
+      }
+
       const isMatch = await user.comparePassword(password);
       if (!isMatch) {
         return res.status(401).json({ message: 'Invalid email or password' });
@@ -125,15 +134,50 @@ router.post(
         return res.status(403).json({ message: 'Account is deactivated' });
       }
 
-      const token = generateToken(user._id);
-
-      res.status(200).json({
-        token,
-        user: user.toPublicJSON(),
-      });
+      res.status(200).json(buildAuthResponse(user));
     } catch (error) {
       console.error('Login error:', error);
       res.status(500).json({ message: 'Server error during login' });
+    }
+  }
+);
+
+// @route  POST /api/auth/admin-login
+// @desc   Login admin user
+// @access Public
+router.post(
+  '/admin-login',
+  [
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('password').notEmpty().withMessage('Password is required'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password } = req.body;
+
+    try {
+      const user = await User.findOne({ email }).select('+password');
+      if (!user || user.role !== 'admin') {
+        return res.status(401).json({ message: 'Invalid admin credentials' });
+      }
+
+      const isMatch = await user.comparePassword(password);
+      if (!isMatch) {
+        return res.status(401).json({ message: 'Invalid admin credentials' });
+      }
+
+      if (!user.isActive) {
+        return res.status(403).json({ message: 'Admin account is deactivated' });
+      }
+
+      return res.status(200).json(buildAuthResponse(user));
+    } catch (error) {
+      console.error('Admin login error:', error);
+      return res.status(500).json({ message: 'Server error during admin login' });
     }
   }
 );

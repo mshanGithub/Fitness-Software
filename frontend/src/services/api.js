@@ -30,9 +30,22 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      const storedUser = localStorage.getItem('twc_user');
+      const currentPath = window.location.pathname;
+      let redirectPath = currentPath.startsWith('/admin') ? '/admin-twc-login' : '/login';
+
+      try {
+        const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+        if (parsedUser?.role === 'admin') {
+          redirectPath = '/admin-twc-login';
+        }
+      } catch {
+        // Ignore storage parsing issues and fall back to path-based redirect.
+      }
+
       localStorage.removeItem('twc_token');
       localStorage.removeItem('twc_user');
-      window.location.href = '/login';
+      window.location.href = redirectPath;
     }
     return Promise.reject(error);
   }
@@ -41,6 +54,7 @@ api.interceptors.response.use(
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
+  adminLogin: (data) => api.post('/auth/admin-login', data),
   forgotPassword: (data) => api.post('/auth/forgot-password', data),
   resetPassword: (data) => api.post('/auth/reset-password', data),
 };
@@ -54,6 +68,16 @@ export const userAPI = {
 
 export const videoAPI = {
   getAll: () => api.get('/videos'),
+};
+
+export const adminAPI = {
+  getOverview: () => api.get('/admin/overview'),
+  getUsers: () => api.get('/admin/users'),
+  updateUser: (userId, data) => api.put(`/admin/users/${userId}`, data),
+  getVideos: () => api.get('/admin/videos'),
+  createVideo: (data) => api.post('/admin/videos', data),
+  updateVideo: (videoId, data) => api.put(`/admin/videos/${videoId}`, data),
+  deleteVideo: (videoId) => api.delete(`/admin/videos/${videoId}`),
 };
 
 export default api;
