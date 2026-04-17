@@ -14,6 +14,12 @@ const videoRoutes = require('./routes/videos');
 const app = express();
 
 app.set('trust proxy', 1);
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
+const normalizeOrigin = (value) => {
+  if (!value) return '';
+  return value.trim().replace(/\/$/, '').toLowerCase();
+};
 
 // Rate limiting
 const limiter = rateLimit({
@@ -25,14 +31,34 @@ const limiter = rateLimit({
 // CORS — explicit allowlist read from env so Azure App Service settings are not needed
 const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
   .split(',')
-  .map((o) => o.trim())
+  .map((o) => normalizeOrigin(o))
   .filter(Boolean);
+
+const isOriginAllowed = (origin) => {
+  const normalizedOrigin = normalizeOrigin(origin);
+
+  return allowedOrigins.some((allowedOrigin) => {
+    if (allowedOrigin.startsWith('*.')) {
+      const domain = allowedOrigin.slice(2);
+      return normalizedOrigin.endsWith(`.${domain}`);
+    }
+
+    return allowedOrigin === normalizedOrigin;
+  });
+};
 
 app.use(
   cors({
     origin: (origin, cb) => {
       // Allow server-to-server / curl (no Origin header) or any listed origin
-      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      if (!origin || isOriginAllowed(origin)) return cb(null, true);
+
+      // In development, allow localhost on any port so Vite port fallback keeps working.
+      if (isDevelopment) {
+        const isLocalhostOrigin = /^https?:\/\/localhost(?::\d+)?$/i.test(origin);
+        if (isLocalhostOrigin) return cb(null, true);
+      }
+
       return cb(new Error(`CORS: origin ${origin} not allowed`));
     },
     credentials: true,
