@@ -319,6 +319,24 @@
   width: 100%;
 }
 
+.login-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -4px;
+}
+
+.forgot-password-link {
+  color: var(--primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.forgot-password-link:hover {
+  color: var(--primary-light);
+  opacity: 0.95;
+}
+
 .btn-spinner {
   display: inline-block;
   width: 20px;
