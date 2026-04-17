@@ -14,20 +14,6 @@ const videoRoutes = require('./routes/videos');
 const app = express();
 
 app.set('trust proxy', 1);
-const isDevelopment = process.env.NODE_ENV !== 'production';
-
-const normalizeOrigin = (value) => {
-  if (!value) return '';
-  return value.trim().replace(/\/$/, '').toLowerCase();
-};
-
-const getOriginHostname = (originValue) => {
-  try {
-    return new URL(originValue).hostname.toLowerCase();
-  } catch {
-    return '';
-  }
-};
 
 // Rate limiting
 const limiter = rateLimit({
@@ -36,44 +22,10 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.',
 });
 
-// CORS — explicit allowlist read from env so Azure App Service settings are not needed
-const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
-  .split(',')
-  .map((o) => normalizeOrigin(o))
-  .filter(Boolean);
-
-const isOriginAllowed = (origin) => {
-  const normalizedOrigin = normalizeOrigin(origin);
-  const originHostname = getOriginHostname(normalizedOrigin);
-
-  return allowedOrigins.some((allowedOrigin) => {
-    if (allowedOrigin === normalizedOrigin) return true;
-
-    const wildcardCandidate = allowedOrigin.replace(/^https?:\/\//, '');
-
-    if (wildcardCandidate.startsWith('*.') && originHostname) {
-      const domain = wildcardCandidate.slice(2);
-      return originHostname.endsWith(`.${domain}`);
-    }
-
-    return false;
-  });
-};
-
 app.use(
   cors({
-    origin: (origin, cb) => {
-      // Allow server-to-server / curl (no Origin header) or any listed origin
-      if (!origin || isOriginAllowed(origin)) return cb(null, true);
-
-      // In development, allow localhost on any port so Vite port fallback keeps working.
-      if (isDevelopment) {
-        const isLocalhostOrigin = /^https?:\/\/localhost(?::\d+)?$/i.test(origin);
-        if (isLocalhostOrigin) return cb(null, true);
-      }
-
-      return cb(new Error(`CORS: origin ${origin} not allowed`));
-    },
+    // Reflect request origin. This removes manual allowlist mismatches.
+    origin: true,
     credentials: true,
   })
 );
