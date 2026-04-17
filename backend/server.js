@@ -21,6 +21,14 @@ const normalizeOrigin = (value) => {
   return value.trim().replace(/\/$/, '').toLowerCase();
 };
 
+const getOriginHostname = (originValue) => {
+  try {
+    return new URL(originValue).hostname.toLowerCase();
+  } catch {
+    return '';
+  }
+};
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -36,14 +44,19 @@ const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
 
 const isOriginAllowed = (origin) => {
   const normalizedOrigin = normalizeOrigin(origin);
+  const originHostname = getOriginHostname(normalizedOrigin);
 
   return allowedOrigins.some((allowedOrigin) => {
-    if (allowedOrigin.startsWith('*.')) {
-      const domain = allowedOrigin.slice(2);
-      return normalizedOrigin.endsWith(`.${domain}`);
+    if (allowedOrigin === normalizedOrigin) return true;
+
+    const wildcardCandidate = allowedOrigin.replace(/^https?:\/\//, '');
+
+    if (wildcardCandidate.startsWith('*.') && originHostname) {
+      const domain = wildcardCandidate.slice(2);
+      return originHostname.endsWith(`.${domain}`);
     }
 
-    return allowedOrigin === normalizedOrigin;
+    return false;
   });
 };
 
