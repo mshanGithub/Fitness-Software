@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "make-admin": "node scripts/setAdmin.js"
+    "make-admin": "node scripts/setAdmin.js",
+    "seed-videos": "node scripts/seedVideos.js",
+    "categorize-videos": "node scripts/categorizeVideos.js"
   },
   "engines": {
     "node": ">=20 <23"

@@ -327,6 +327,50 @@
   z-index: 1;
 }
 
+.assigned-plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.assigned-plan-card {
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.assigned-plan-card h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  margin: 0;
+  color: var(--text);
+}
+
+.assigned-plan-card p {
+  margin: 8px 0 10px;
+  color: var(--text-sub);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.assigned-plan-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.assigned-plan-meta span {
+  font-size: 0.72rem;
+  color: var(--primary);
+  background: rgba(126, 200, 200, 0.08);
+  border: 1px solid rgba(126, 200, 200, 0.2);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
 .workouts-grid {
   display: flex;
   flex-direction: column;
@@ -344,12 +388,32 @@
   border: 1px solid var(--glass-border);
   border-radius: 12px;
   transition: all 0.25s;
-  cursor: default;
+  cursor: pointer;
 }
 
-.workout-emoji {
-  font-size: 1.8rem;
+.workout-thumb-wrap {
+  width: 54px;
+  height: 54px;
+  border-radius: 10px;
+  overflow: hidden;
   flex-shrink: 0;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.workout-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.workout-thumb-fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--primary);
 }
 
 .workout-info {
@@ -415,6 +479,25 @@
   box-shadow: 0 0 12px rgba(126, 200, 200, 0.18);
 }
 
+.btn-log.is-completed {
+  width: auto;
+  min-width: 108px;
+  height: 34px;
+  border-radius: 999px;
+  padding: 0 12px;
+  background: rgba(126, 200, 200, 0.14);
+  color: #ffffff;
+  border: 1px solid rgba(126, 200, 200, 0.35);
+  box-shadow: 0 0 16px rgba(126, 200, 200, 0.16);
+}
+
+.btn-log-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  margin-left: 5px;
+}
+
 .btn-log:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -452,6 +535,34 @@
 .btn-primary:not(:disabled):hover {
   background: linear-gradient(135deg, var(--primary), var(--primary-light));
   box-shadow: 0 4px 32px rgba(126, 200, 200, 0.35);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  border-radius: 10px;
+  border: 1px solid rgba(126, 200, 200, 0.35);
+  background: rgba(126, 200, 200, 0.08);
+  color: #ffffff;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  letter-spacing: 1px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary:not(:disabled):hover {
+  background: rgba(126, 200, 200, 0.18);
+  box-shadow: 0 0 20px rgba(126, 200, 200, 0.2);
 }
 
 .btn-sm {
@@ -669,6 +780,60 @@
   font-size: 0.85rem;
   color: var(--text-sub);
   line-height: 1.6;
+}
+
+.recommended-playlist-wrap {
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  background: #000;
+  aspect-ratio: 16 / 9;
+}
+
+.recommended-playlist-wrap iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.recommended-link {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--primary);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(126, 200, 200, 0.35);
+  padding-bottom: 2px;
+}
+
+.recommended-link:hover {
+  color: #ffffff;
+  border-bottom-color: #ffffff;
+}
+
+.quick-workout-modal-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 20px 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.quick-workout-modal-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.quick-workout-modal-actions {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px 20px;
+  flex-wrap: wrap;
 }
 
 @keyframes spin {

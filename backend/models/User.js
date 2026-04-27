@@ -63,9 +63,39 @@ const userSchema = new mongoose.Schema(
       totalCaloriesBurned: { type: Number, default: 0 },
       weeklyGoal: { type: Number, default: 4 },
     },
+    workoutPlanReport: {
+      type: [
+        {
+          workoutId: { type: String, default: '' },
+          workoutName: { type: String, default: '' },
+          planName: { type: String, default: '' },
+          dayNumber: { type: Number, default: null },
+          duration: { type: String, default: '' },
+          videoUrl: { type: String, default: '' },
+          status: {
+            type: String,
+            enum: ['completed', 'skipped'],
+            default: 'completed',
+          },
+          caloriesBurned: { type: Number, default: 0 },
+          loggedAt: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
+    },
     isActive: {
       type: Boolean,
       default: true,
+    },
+    assignedWorkoutPlan: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'WorkoutPlan',
+      default: null,
+    },
+    assignedFoodPlans: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'FoodPlan',
+      default: [],
     },
     passwordResetOtpHash: {
       type: String,

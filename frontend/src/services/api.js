@@ -61,8 +61,10 @@ export const authAPI = {
 
 export const userAPI = {
   getProfile: () => api.get('/user/profile'),
+  getAssignedPlans: () => api.get('/user/assigned-plans'),
   updateProfile: (data) => api.put('/user/profile', data),
   getStats: () => api.get('/user/stats'),
+  getWorkoutReport: () => api.get('/user/workout-report'),
   logWorkout: (data) => api.post('/user/log-workout', data),
 };
 
@@ -74,6 +76,16 @@ export const adminAPI = {
   getOverview: () => api.get('/admin/overview'),
   getUsers: () => api.get('/admin/users'),
   updateUser: (userId, data) => api.put(`/admin/users/${userId}`, data),
+  updateUserAssignments: (userId, data) => api.put(`/admin/users/${userId}/assignments`, data),
+
+  getWorkoutPlans: () => api.get('/admin/workout-plans'),
+  createWorkoutPlan: (data) => api.post('/admin/workout-plans', data),
+  updateWorkoutPlan: (planId, data) => api.put(`/admin/workout-plans/${planId}`, data),
+  deleteWorkoutPlan: (planId) => api.delete(`/admin/workout-plans/${planId}`),
+
+  getFoodPlans: () => api.get('/admin/food-plans'),
+
+  getVideoCategories: () => api.get('/admin/video-categories'),
   getVideos: () => api.get('/admin/videos'),
   createVideo: (data) => api.post('/admin/videos', data),
   updateVideo: (videoId, data) => api.put(`/admin/videos/${videoId}`, data),

@@ -142,7 +142,6 @@ const Signup = () => {
             {[
               { icon: '🎯', text: 'Personalized fitness programs' },
               { icon: '🥗', text: 'Custom nutrition plans' },
-              { icon: '💬', text: 'Community & coaching support' },
               { icon: '📊', text: 'Real-time progress tracking' },
             ].map((feat, i) => (
               <motion.div

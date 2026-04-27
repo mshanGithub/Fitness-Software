@@ -1,0 +1,333 @@
+.food-plan-shell,
+.food-plan-assigned-tab,
+.food-plan-week-tab,
+.food-plan-day-tab,
+.food-plan-nav-button,
+.food-plan-hero,
+.food-plan-focus-card,
+.food-plan-day-nav,
+.food-plan-meal-card,
+.food-plan-fallback-card {
+  --twc-bg: #08111d;
+  --twc-accent: #7ecdd6;
+}
+
+.food-plan-shell {
+  border: 1px solid rgba(126, 205, 214, 0.28);
+  background: rgba(8, 17, 29, 0.9);
+  border-radius: 18px;
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+  color: #eef5ff;
+}
+
+.food-plan-assigned-tabs,
+.food-plan-week-tabs,
+.food-plan-day-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.food-plan-assigned-tab,
+.food-plan-week-tab,
+.food-plan-day-tab,
+.food-plan-nav-button {
+  border: 1px solid rgba(126, 205, 214, 0.3);
+  background: rgba(8, 17, 29, 0.95);
+  color: #eef5ff;
+  border-radius: 12px;
+  padding: 0.5rem 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.food-plan-assigned-tab.active,
+.food-plan-week-tab.active,
+.food-plan-day-tab.active {
+  background: rgba(126, 205, 214, 0.2);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.food-plan-week-tab {
+  min-width: 130px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.food-plan-week-tab span {
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
+
+.food-plan-week-tab strong {
+  margin-top: 0.16rem;
+  font-size: 1.06rem;
+}
+
+.food-plan-day-tab {
+  border-radius: 999px;
+}
+
+.food-plan-day-tab.today {
+  border-color: rgba(245, 166, 35, 0.7);
+  box-shadow: 0 0 0 1px rgba(245, 166, 35, 0.28), 0 0 18px rgba(245, 166, 35, 0.2);
+}
+
+.food-plan-hero {
+  padding: 1.05rem;
+  border: 1px solid rgba(126, 205, 214, 0.34);
+  border-radius: 16px;
+  background: rgba(8, 17, 29, 0.95);
+}
+
+.food-plan-brand {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.76rem;
+  color: var(--twc-accent);
+}
+
+.food-plan-hero h3 {
+  margin: 0.35rem 0;
+  color: #ffffff;
+  font-size: clamp(1.3rem, 3.2vw, 2rem);
+}
+
+.food-plan-hero p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.food-plan-outcomes {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+}
+
+.food-plan-outcome-chip {
+  padding: 0.2rem 0.62rem;
+  border-radius: 999px;
+  font-size: 0.73rem;
+  color: var(--twc-accent);
+  border: 1px solid rgba(126, 205, 214, 0.35);
+  background: rgba(126, 205, 214, 0.12);
+}
+
+.food-plan-focus-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  border: 1px solid rgba(126, 205, 214, 0.32);
+  background: rgba(8, 17, 29, 0.96);
+  border-radius: 14px;
+  padding: 0.82rem;
+}
+
+.food-plan-focus-label {
+  text-transform: uppercase;
+  color: var(--twc-accent);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+}
+
+.food-plan-focus-card h4 {
+  margin: 0.25rem 0;
+  font-size: 1.8rem;
+  color: #ffffff;
+}
+
+.food-plan-focus-card p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.food-plan-focus-card ul {
+  margin: 0;
+  padding-left: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.food-plan-focus-card li {
+  margin-bottom: 0.24rem;
+}
+
+.food-plan-day-nav {
+  border: 1px solid rgba(126, 205, 214, 0.3);
+  background: rgba(8, 17, 29, 0.96);
+  border-radius: 12px;
+  padding: 0.75rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.food-plan-nav-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 10px;
+}
+
+.food-plan-nav-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.food-plan-day-title {
+  text-align: center;
+}
+
+.food-plan-day-title span {
+  color: rgba(255, 255, 255, 0.74);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+}
+
+.food-plan-day-title strong {
+  display: block;
+  margin-top: 0.16rem;
+  color: #ffffff;
+  font-size: clamp(1rem, 2.2vw, 1.65rem);
+}
+
+.food-plan-today-badge {
+  display: inline-block;
+  margin-top: 0.35rem;
+  font-style: normal;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0c1117;
+  background: rgba(245, 166, 35, 0.9);
+  border: 1px solid rgba(245, 166, 35, 0.95);
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+}
+
+.food-plan-meals-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.food-plan-meal-card {
+  border: 1px solid rgba(126, 205, 214, 0.28);
+  background: linear-gradient(145deg, rgba(8, 17, 29, 0.95), rgba(126, 205, 214, 0.06));
+  border-radius: 12px;
+  padding: 0.72rem;
+}
+
+.food-plan-meal-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.food-plan-meal-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.food-plan-meal-head span {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.food-plan-meal-head h5 {
+  margin: 0.15rem 0 0;
+  color: #ffffff;
+  font-size: 1.12rem;
+}
+
+.food-plan-meal-card ul {
+  margin: 0.72rem 0 0;
+  padding-left: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.food-plan-meal-card li {
+  margin-bottom: 0.28rem;
+}
+
+.food-plan-footer {
+  margin: 0;
+  border-top: 1px solid rgba(126, 205, 214, 0.24);
+  padding-top: 0.72rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.84rem;
+}
+
+.food-plan-head h3 {
+  margin: 0;
+  color: #ffffff;
+}
+
+.food-plan-head p {
+  margin: 0.34rem 0 0;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.food-plan-fallback-grid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.food-plan-fallback-card {
+  border: 1px solid rgba(126, 205, 214, 0.3);
+  border-radius: 12px;
+  background: rgba(8, 17, 29, 0.95);
+  padding: 0.72rem;
+}
+
+.food-plan-fallback-card h4 {
+  margin: 0;
+  color: #ffffff;
+}
+
+.food-plan-fallback-card ul {
+  margin: 0.55rem 0 0;
+  padding-left: 1rem;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+@media (max-width: 1100px) {
+  .food-plan-meals-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 780px) {
+  .food-plan-focus-card {
+    grid-template-columns: 1fr;
+  }
+
+  .food-plan-day-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .food-plan-day-title {
+    order: -1;
+  }
+
+  .food-plan-meals-grid {
+    grid-template-columns: 1fr;
+  }
+}

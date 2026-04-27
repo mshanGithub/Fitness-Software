@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { WORKOUT_CATEGORY_VALUES } = require('../config/workoutCategories');
 
 const workoutVideoSchema = new mongoose.Schema(
   {
@@ -19,7 +20,8 @@ const workoutVideoSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      default: 'General',
+      enum: WORKOUT_CATEGORY_VALUES,
+      default: 'full_body',
       trim: true,
     },
     duration: {

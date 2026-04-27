@@ -1,6 +1,7 @@
 const express = require('express');
 const WorkoutVideo = require('../models/WorkoutVideo');
 const { protect } = require('../middleware/authMiddleware');
+const { getCategoriesForGoal } = require('../config/workoutCategories');
 
 const router = express.Router();
 
@@ -9,7 +10,11 @@ const router = express.Router();
 // @access Private
 router.get('/', protect, async (req, res) => {
   try {
-    const videos = await WorkoutVideo.find({ isActive: true }).sort({ createdAt: -1 });
+    const allowedCategories = getCategoriesForGoal(req.user?.fitnessGoal);
+    const videos = await WorkoutVideo.find({
+      isActive: true,
+      category: { $in: allowedCategories },
+    }).sort({ createdAt: -1 });
 
     // Seed a default video if the collection is empty
     if (videos.length === 0) {
@@ -17,7 +22,7 @@ router.get('/', protect, async (req, res) => {
         title: 'Full Body Workout with Coach Cain',
         youtubeId: 'Pe8hzGVjZaU',
         description: 'Complete full-body workout session — follow along with Coach Cain!',
-        category: 'Full Body',
+        category: 'full_body',
         duration: '30 min',
       });
       return res.json([defaultVideo]);
