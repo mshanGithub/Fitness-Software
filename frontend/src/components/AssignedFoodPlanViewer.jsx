@@ -304,7 +304,6 @@ const AssignedFoodPlanViewer = ({ foodPlans = [] }) => {
         </>
       )}
 
-      {structuredPlan.footerNote && <p className="food-plan-footer">{structuredPlan.footerNote}</p>}
     </section>
   );
 };
