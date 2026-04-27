@@ -57,12 +57,18 @@ const normalizePlanDays = (days = []) => {
     .map((day, index) => {
       const workouts = Array.isArray(day.workouts)
         ? day.workouts
-          .map((workout) => ({
-            title: String(workout.title || '').trim(),
-            videoUrl: String(workout.videoUrl || '').trim(),
-            duration: String(workout.duration || '').trim(),
-            description: String(workout.description || '').trim(),
-          }))
+          .map((workout) => {
+            const videoUrl = String(workout.videoUrl || '').trim();
+            const youtubeId = extractYouTubeId(videoUrl);
+            
+            return {
+              title: String(workout.title || '').trim(),
+              videoUrl,
+              youtubeId, // Store extracted ID for easier frontend consumption
+              duration: String(workout.duration || '').trim(),
+              description: String(workout.description || '').trim(),
+            };
+          })
           .filter((workout) => workout.title)
         : [];
 

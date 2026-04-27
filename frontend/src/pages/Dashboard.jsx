@@ -35,6 +35,7 @@ const extractYouTubeIdFromUrl = (url = '') => {
     return '';
   }
 
+  // Check if it's already just an ID (11 characters, alphanumeric + underscore/dash)
   if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) {
     return trimmed;
   }
@@ -42,14 +43,23 @@ const extractYouTubeIdFromUrl = (url = '') => {
   try {
     const parsed = new URL(trimmed);
 
+    // Handle youtu.be short URLs
     if (parsed.hostname.includes('youtu.be')) {
-      return parsed.pathname.replace('/', '').trim();
+      const id = parsed.pathname.replace('/', '').trim();
+      if (id && /^[a-zA-Z0-9_-]{11}$/.test(id)) {
+        return id;
+      }
     }
 
+    // Handle youtube.com URLs
     if (parsed.hostname.includes('youtube.com')) {
-      return (parsed.searchParams.get('v') || '').trim();
+      const vidParam = parsed.searchParams.get('v');
+      if (vidParam && /^[a-zA-Z0-9_-]{11}$/.test(vidParam)) {
+        return vidParam.trim();
+      }
     }
-  } catch {
+  } catch (error) {
+    // URL parsing failed, return empty string
     return '';
   }
 
@@ -232,7 +242,8 @@ const Dashboard = () => {
     .flatMap((day) => (day.workouts || []).map((workout, index) => {
       const minutes = durationToMinutes(workout.duration);
       const estimatedCalories = minutes > 0 ? minutes * 8 : 150;
-      const youtubeId = extractYouTubeIdFromUrl(workout.videoUrl);
+      // Use stored youtubeId if available, otherwise extract from videoUrl
+      const youtubeId = workout.youtubeId || extractYouTubeIdFromUrl(workout.videoUrl);
 
       return {
         id: `${day.dayNumber}-${index}`,
@@ -501,12 +512,30 @@ const Dashboard = () => {
                   </button>
                 </div>
                 <div className="video-modal-player">
-                  <iframe
-                    src={`https://www.youtube.com/embed/${activeQuickWorkout.youtubeId}?autoplay=1&rel=0`}
-                    title={activeQuickWorkout.name}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
+                  {activeQuickWorkout.youtubeId ? (
+                    <iframe
+                      src={`https://www.youtube.com/embed/${activeQuickWorkout.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
+                      title={activeQuickWorkout.name}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <div className="video-player-error">
+                      <div className="error-icon">!</div>
+                      <h4>Video Not Available</h4>
+                      <p>The video link for this workout is not configured.</p>
+                      {activeQuickWorkout.videoUrl && (
+                        <a 
+                          href={activeQuickWorkout.videoUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="btn-primary"
+                        >
+                          Watch on YouTube
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="quick-workout-modal-meta">
                   <span><Clock size={12} /> {activeQuickWorkout.duration}</span>
