@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import {
   Flame, Zap, Trophy, TrendingUp, Calendar,
   Dumbbell, Activity, Target, Play, CheckCircle2,
-  BarChart3, Clock, Youtube, X, ClipboardList,
+  BarChart3, Clock, X, ClipboardList,
 } from 'lucide-react';
 import AssignedFoodPlanViewer from '../components/AssignedFoodPlanViewer';
 import './Dashboard.css';
@@ -96,9 +96,6 @@ const cardVariants = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
 };
-
-const recommendedPlaylistEmbedUrl = 'https://www.youtube.com/embed/videoseries?list=PLqmTmGb2W_Astd5mhJ-usF8Q8lPXMgzst';
-const recommendedPlaylistUrl = 'https://youtube.com/playlist?list=PLqmTmGb2W_Astd5mhJ-usF8Q8lPXMgzst&si=XxRTnkaI6wdbDnm_';
 
 const Dashboard = () => {
   const { user, stats, refreshStats } = useAuth();
@@ -466,27 +463,6 @@ const Dashboard = () => {
           </motion.div>
         )}
 
-        <motion.div className="dash-card" variants={cardVariants}>
-          <div className="card-header">
-            <h3 className="card-title">
-              <Youtube size={18} />
-              Recommended
-            </h3>
-            <span className="card-badge">The Great Eight Series</span>
-          </div>
-          <div className="recommended-playlist-wrap">
-            <iframe
-              src={recommendedPlaylistEmbedUrl}
-              title="The Great Eight Series"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
-          <a className="recommended-link" href={recommendedPlaylistUrl} target="_blank" rel="noopener noreferrer">
-            Open Playlist on YouTube
-          </a>
-        </motion.div>
-
         {/* Quick Workout Player Modal */}
         <AnimatePresence>
           {activeQuickWorkout && (
@@ -591,7 +567,7 @@ const Dashboard = () => {
 
         {/* Footer */}
         <motion.div className="dash-footer" variants={cardVariants}>
-          <p>© 2024 Train With Cain · Built with 💪 for your strongest chapter</p>
+          <p>© 2026 Train With Cain · Built with 💪 for your strongest chapter</p>
         </motion.div>
       </motion.div>
     </div>
