@@ -513,12 +513,24 @@ const Dashboard = () => {
                 </div>
                 <div className="video-modal-player">
                   {activeQuickWorkout.youtubeId ? (
-                    <iframe
-                      src={`https://www.youtube.com/embed/${activeQuickWorkout.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
-                      title={activeQuickWorkout.name}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
+                    <a
+                      href={activeQuickWorkout.videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="video-thumbnail-link"
+                    >
+                      <img
+                        src={activeQuickWorkout.thumbnailUrl}
+                        alt={activeQuickWorkout.name}
+                        className="video-thumbnail"
+                      />
+                      <div className="video-play-overlay">
+                        <div className="play-button">
+                          <Play size={48} fill="#fff" color="#fff" />
+                        </div>
+                        <span className="open-youtube-text">Open on YouTube</span>
+                      </div>
+                    </a>
                   ) : (
                     <div className="video-player-error">
                       <div className="error-icon">!</div>
