@@ -65,6 +65,7 @@ export const userAPI = {
   updateProfile: (data) => api.put('/user/profile', data),
   getStats: () => api.get('/user/stats'),
   getWorkoutReport: () => api.get('/user/workout-report'),
+  getLiveMeet: () => api.get('/user/live-meet'),
   logWorkout: (data) => api.post('/user/log-workout', data),
 };
 
@@ -75,6 +76,8 @@ export const videoAPI = {
 export const adminAPI = {
   getOverview: () => api.get('/admin/overview'),
   getUsers: () => api.get('/admin/users'),
+  getLiveMeet: () => api.get('/admin/live-meet'),
+  updateLiveMeet: (data) => api.put('/admin/live-meet', data),
   updateUser: (userId, data) => api.put(`/admin/users/${userId}`, data),
   updateUserAssignments: (userId, data) => api.put(`/admin/users/${userId}/assignments`, data),
 

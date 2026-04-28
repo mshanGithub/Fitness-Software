@@ -1,6 +1,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
+const LiveMeet = require('../models/LiveMeet');
 const { PREDEFINED_FOOD_PLANS } = require('../config/predefinedFoodPlans');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -127,6 +128,38 @@ router.get('/stats', protect, async (req, res) => {
   } catch (error) {
     console.error('Stats error:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route  GET /api/user/live-meet
+// @desc   Get live meet access for current user
+// @access Private
+router.get('/live-meet', protect, async (req, res) => {
+  try {
+    const liveMeet = await LiveMeet.findOne().sort({ updatedAt: -1 });
+
+    if (!liveMeet || !liveMeet.isActive || !liveMeet.meetingUrl) {
+      return res.status(200).json({ hasAccess: false, liveMeet: null });
+    }
+
+    const hasAccess = liveMeet.audience === 'all'
+      || (liveMeet.allowedUsers || []).some((userId) => String(userId) === String(req.user._id));
+
+    if (!hasAccess) {
+      return res.status(200).json({ hasAccess: false, liveMeet: null });
+    }
+
+    return res.status(200).json({
+      hasAccess: true,
+      liveMeet: {
+        meetingUrl: liveMeet.meetingUrl,
+        audience: liveMeet.audience,
+        updatedAt: liveMeet.updatedAt,
+      },
+    });
+  } catch (error) {
+    console.error('Live meet access error:', error);
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 

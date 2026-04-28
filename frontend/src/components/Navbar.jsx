@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Dumbbell, LayoutDashboard, LogOut, Menu, ShieldCheck, X } from 'lucide-react';
+import { Dumbbell, LayoutDashboard, LogOut, Menu, ShieldCheck, Video, X } from 'lucide-react';
+import { userAPI } from '../services/api';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -10,6 +11,25 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [liveMeet, setLiveMeet] = useState(null);
+
+  useEffect(() => {
+    const loadLiveMeet = async () => {
+      if (!isAuthenticated || isAdmin) {
+        setLiveMeet(null);
+        return;
+      }
+
+      try {
+        const { data } = await userAPI.getLiveMeet();
+        setLiveMeet(data?.hasAccess ? data.liveMeet : null);
+      } catch {
+        setLiveMeet(null);
+      }
+    };
+
+    loadLiveMeet();
+  }, [isAuthenticated, isAdmin]);
 
   const handleLogout = () => {
     logout();
@@ -19,6 +39,14 @@ const Navbar = () => {
   const navLinks = isAdmin
     ? [{ label: 'Admin Dashboard', path: '/admin/dashboard', icon: <ShieldCheck size={18} /> }]
     : [{ label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> }];
+
+  const handleJoinLiveMeet = () => {
+    if (!liveMeet?.meetingUrl) {
+      return;
+    }
+
+    window.open(liveMeet.meetingUrl, '_blank', 'noopener,noreferrer');
+  };
 
   if (!isAuthenticated) return null;
 
@@ -60,6 +88,17 @@ const Navbar = () => {
 
         {/* User + Logout */}
         <div className="navbar-right desktop-only">
+          {!isAdmin && liveMeet?.meetingUrl && (
+            <motion.button
+              className="btn-live-meet"
+              onClick={handleJoinLiveMeet}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Video size={16} />
+              <span>Join Live Meet</span>
+            </motion.button>
+          )}
           <span className="nav-welcome">
             {isAdmin ? 'Admin' : 'Hey'}, <strong>{user?.firstName}</strong>
           </span>
@@ -99,6 +138,17 @@ const Navbar = () => {
                 {link.icon} {link.label}
               </button>
             ))}
+            {!isAdmin && liveMeet?.meetingUrl && (
+              <button
+                className="mobile-nav-link live-meet"
+                onClick={() => {
+                  handleJoinLiveMeet();
+                  setMobileOpen(false);
+                }}
+              >
+                <Video size={16} /> Join Live Meet
+              </button>
+            )}
             <button className="mobile-nav-link logout" onClick={handleLogout}>
               <LogOut size={16} /> Logout
             </button>

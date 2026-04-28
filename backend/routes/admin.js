@@ -4,6 +4,7 @@ const User = require('../models/User');
 const WorkoutVideo = require('../models/WorkoutVideo');
 const WorkoutPlan = require('../models/WorkoutPlan');
 const FoodPlan = require('../models/FoodPlan');
+const LiveMeet = require('../models/LiveMeet');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 const { WORKOUT_CATEGORY_OPTIONS, WORKOUT_CATEGORY_VALUES } = require('../config/workoutCategories');
 const { PREDEFINED_FOOD_PLANS } = require('../config/predefinedFoodPlans');
@@ -46,6 +47,19 @@ const validate = (req, res) => {
   }
 
   return true;
+};
+
+const isValidGoogleMeetUrl = (input = '') => {
+  if (!input || typeof input !== 'string') {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(String(input).trim());
+    return parsed.protocol === 'https:' && parsed.hostname === 'meet.google.com';
+  } catch {
+    return false;
+  }
 };
 
 const normalizePlanDays = (days = []) => {
@@ -114,6 +128,88 @@ router.use(protect, adminOnly);
 router.get('/video-categories', (req, res) => {
   return res.status(200).json(WORKOUT_CATEGORY_OPTIONS);
 });
+
+router.get('/live-meet', async (req, res) => {
+  try {
+    const liveMeet = await LiveMeet.findOne()
+      .sort({ updatedAt: -1 })
+      .populate('allowedUsers', 'firstName lastName email role');
+
+    return res.status(200).json({ liveMeet: liveMeet || null });
+  } catch (error) {
+    console.error('Admin live meet fetch error:', error);
+    return res.status(500).json({ message: 'Unable to load live meet config' });
+  }
+});
+
+router.put(
+  '/live-meet',
+  [
+    body('meetingUrl').optional().trim(),
+    body('audience').optional().isIn(['all', 'selected']).withMessage('Audience must be all or selected'),
+    body('allowedUserIds').optional().isArray().withMessage('allowedUserIds must be an array'),
+    body('isActive').optional().isBoolean().withMessage('isActive must be boolean'),
+  ],
+  async (req, res) => {
+    if (!validate(req, res)) {
+      return;
+    }
+
+    try {
+      const existing = await LiveMeet.findOne().sort({ updatedAt: -1 });
+      const audience = req.body.audience || existing?.audience || 'all';
+      const isActive = typeof req.body.isActive === 'boolean' ? req.body.isActive : (existing?.isActive || false);
+      const meetingUrl = String(req.body.meetingUrl ?? existing?.meetingUrl ?? '').trim();
+      const allowedUserIds = Array.isArray(req.body.allowedUserIds)
+        ? req.body.allowedUserIds.filter(Boolean)
+        : (existing?.allowedUsers || []).map((entry) => String(entry));
+
+      if (isActive) {
+        if (!meetingUrl) {
+          return res.status(400).json({ message: 'Google Meet link is required when live meet is active' });
+        }
+
+        if (!isValidGoogleMeetUrl(meetingUrl)) {
+          return res.status(400).json({ message: 'Please enter a valid Google Meet link (https://meet.google.com/...)' });
+        }
+      }
+
+      if (audience === 'selected') {
+        if (allowedUserIds.length === 0) {
+          return res.status(400).json({ message: 'Select at least one user for selected audience mode' });
+        }
+
+        const validUsers = await User.find({ _id: { $in: allowedUserIds }, role: 'user' }).select('_id');
+        if (validUsers.length !== allowedUserIds.length) {
+          return res.status(400).json({ message: 'One or more selected users are invalid' });
+        }
+      }
+
+      const payload = {
+        meetingUrl,
+        audience,
+        allowedUsers: audience === 'selected' ? allowedUserIds : [],
+        isActive,
+        updatedBy: req.user._id,
+      };
+
+      if (!existing) {
+        payload.createdBy = req.user._id;
+      }
+
+      const liveMeet = await LiveMeet.findOneAndUpdate(
+        {},
+        { $set: payload },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      ).populate('allowedUsers', 'firstName lastName email role');
+
+      return res.status(200).json({ liveMeet });
+    } catch (error) {
+      console.error('Admin live meet update error:', error);
+      return res.status(500).json({ message: 'Unable to update live meet config' });
+    }
+  }
+);
 
 router.get('/overview', async (req, res) => {
   try {

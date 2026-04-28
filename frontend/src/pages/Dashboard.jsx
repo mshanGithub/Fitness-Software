@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import {
   Flame, Zap, Trophy, TrendingUp, Calendar,
   Dumbbell, Activity, Target, Play, CheckCircle2,
-  BarChart3, Clock, X, ClipboardList,
+  BarChart3, Clock, ExternalLink, X, ClipboardList,
 } from 'lucide-react';
 import AssignedFoodPlanViewer from '../components/AssignedFoodPlanViewer';
 import './Dashboard.css';
@@ -95,6 +95,11 @@ const containerVariants = {
 const cardVariants = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+};
+
+const quickAccessLinks = {
+  funnelPage: 'https://app.gohighlevel.com/v2/preview/Rhn10FQVnvw9fLDvyPBZ?notrack=true',
+  classSchedule: 'https://api.leadconnectorhq.com/widget/bookings/twc-session-sign-up',
 };
 
 const Dashboard = () => {
@@ -369,6 +374,38 @@ const Dashboard = () => {
               </motion.div>
             ))}
           </div>
+        </motion.div>
+
+        <motion.div className="quick-access-row" variants={cardVariants}>
+          <article className="quick-access-card quick-access-booking">
+            <div className="quick-access-chip">Live Booking</div>
+            <h3>Book Your Meet Session</h3>
+            <p>Reserve your class slot instantly and lock your next training session.</p>
+            <a
+              className="quick-access-cta"
+              href={quickAccessLinks.classSchedule}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Book Class Schedule
+              <ExternalLink size={15} />
+            </a>
+          </article>
+
+          <article className="quick-access-card quick-access-offers">
+            <div className="quick-access-chip">Special Offers</div>
+            <h3>Explore Program Funnel</h3>
+            <p>Check your latest program offers and choose the best next step.</p>
+            <a
+              className="quick-access-cta"
+              href={quickAccessLinks.funnelPage}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open Offer Page
+              <ExternalLink size={15} />
+            </a>
+          </article>
         </motion.div>
 
         {(assignedPlans.workoutPlan || assignedPlans.foodPlans.length > 0) && (

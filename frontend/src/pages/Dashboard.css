@@ -203,6 +203,88 @@
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(126, 200, 200, 0.06);
 }
 
+.quick-access-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.quick-access-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.quick-access-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 85% 15%, rgba(255, 255, 255, 0.22), transparent 40%);
+  pointer-events: none;
+}
+
+.quick-access-booking {
+  background: linear-gradient(140deg, rgba(20, 119, 132, 0.9), rgba(30, 196, 170, 0.7));
+}
+
+.quick-access-offers {
+  background: linear-gradient(140deg, rgba(160, 115, 18, 0.88), rgba(245, 166, 35, 0.68));
+}
+
+.quick-access-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.quick-access-card h3 {
+  margin: 10px 0 8px;
+  color: #ffffff;
+  font-size: 1.2rem;
+  line-height: 1.25;
+}
+
+.quick-access-card p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  max-width: 90%;
+}
+
+.quick-access-cta {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(7, 12, 18, 0.74);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.quick-access-cta:hover {
+  transform: translateY(-2px);
+  background: rgba(7, 12, 18, 0.9);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+}
+
 .card-header {
   display: flex;
   align-items: center;
@@ -984,6 +1066,10 @@
 }
 
 @media (max-width: 600px) {
+  .quick-access-row {
+    grid-template-columns: 1fr;
+  }
+
   .dash-hero {
     padding: 24px 20px;
   }

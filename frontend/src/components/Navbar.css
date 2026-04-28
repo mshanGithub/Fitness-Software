@@ -104,6 +104,51 @@
   transition: all 0.2s;
 }
 
+.btn-live-meet {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 9px;
+  border: 1px solid rgba(126, 205, 214, 0.72);
+  background: linear-gradient(120deg, rgba(126, 205, 214, 0.2), rgba(126, 205, 214, 0.34));
+  color: #dffeff;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow:
+    0 0 0 1px rgba(126, 205, 214, 0.2) inset,
+    0 0 16px rgba(126, 205, 214, 0.35),
+    0 0 34px rgba(126, 205, 214, 0.2);
+  animation: liveMeetPulse 1.8s ease-in-out infinite;
+  transition: all 0.24s;
+}
+
+.btn-live-meet::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  left: -140%;
+  width: 60%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-20deg);
+  animation: liveMeetShine 2.4s linear infinite;
+}
+
+.btn-live-meet:hover {
+  background: linear-gradient(120deg, rgba(126, 205, 214, 0.32), rgba(126, 205, 214, 0.52));
+  color: #ffffff;
+  border-color: rgba(126, 205, 214, 0.95);
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(126, 205, 214, 0.35) inset,
+    0 0 20px rgba(126, 205, 214, 0.45),
+    0 0 42px rgba(126, 205, 214, 0.28);
+}
+
 .btn-logout:hover {
   background: rgba(126, 200, 200, 0.12);
   color: var(--primary);
@@ -150,6 +195,43 @@
 .mobile-nav-link.logout:hover {
   color: #f87171;
   background: rgba(248, 113, 113, 0.1);
+}
+
+.mobile-nav-link.live-meet {
+  color: #dffeff;
+  border: 1px solid rgba(126, 205, 214, 0.52);
+  background: linear-gradient(120deg, rgba(126, 205, 214, 0.16), rgba(126, 205, 214, 0.3));
+  box-shadow: 0 0 14px rgba(126, 205, 214, 0.2);
+}
+
+.mobile-nav-link.live-meet:hover {
+  color: #ffffff;
+  background: linear-gradient(120deg, rgba(126, 205, 214, 0.28), rgba(126, 205, 214, 0.44));
+}
+
+@keyframes liveMeetPulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(126, 205, 214, 0.2) inset,
+      0 0 16px rgba(126, 205, 214, 0.32),
+      0 0 34px rgba(126, 205, 214, 0.18);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(126, 205, 214, 0.35) inset,
+      0 0 22px rgba(126, 205, 214, 0.52),
+      0 0 46px rgba(126, 205, 214, 0.3);
+  }
+}
+
+@keyframes liveMeetShine {
+  0% {
+    left: -140%;
+  }
+  100% {
+    left: 160%;
+  }
 }
 
 .desktop-only {

@@ -7,9 +7,11 @@ import {
   Calendar,
   CheckCircle2,
   ClipboardList,
+  Link,
   Salad,
   Target,
   Users,
+  Video,
   X,
 } from 'lucide-react';
 import { adminAPI } from '../services/api';
@@ -106,6 +108,13 @@ const AdminDashboard = () => {
   const [savingAssignmentUserId, setSavingAssignmentUserId] = useState('');
   const [updatingAccessUserId, setUpdatingAccessUserId] = useState('');
   const [selectedOverviewUser, setSelectedOverviewUser] = useState(null);
+  const [liveMeetConfig, setLiveMeetConfig] = useState({
+    meetingUrl: '',
+    audience: 'all',
+    allowedUserIds: [],
+    isActive: false,
+  });
+  const [savingLiveMeet, setSavingLiveMeet] = useState(false);
 
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [creatingPlan, setCreatingPlan] = useState(false);
@@ -126,12 +135,14 @@ const AdminDashboard = () => {
         { data: workoutPlansData },
         { data: foodPlansData },
         { data: videosData },
+        { data: liveMeetData },
       ] = await Promise.all([
         adminAPI.getOverview(),
         adminAPI.getUsers(),
         adminAPI.getWorkoutPlans(),
         adminAPI.getFoodPlans(),
         adminAPI.getVideos(),
+        adminAPI.getLiveMeet(),
       ]);
 
       setOverview({
@@ -142,6 +153,14 @@ const AdminDashboard = () => {
       setWorkoutPlans(workoutPlansData || []);
       setFoodPlans(foodPlansData || []);
       setVideos((videosData || []).filter((video) => video.isActive !== false));
+      setLiveMeetConfig({
+        meetingUrl: liveMeetData?.liveMeet?.meetingUrl || '',
+        audience: liveMeetData?.liveMeet?.audience || 'all',
+        allowedUserIds: Array.isArray(liveMeetData?.liveMeet?.allowedUsers)
+          ? liveMeetData.liveMeet.allowedUsers.map((entry) => entry._id)
+          : [],
+        isActive: Boolean(liveMeetData?.liveMeet?.isActive),
+      });
       setAssignmentDrafts(
         (usersData || []).reduce((accumulator, user) => {
           accumulator[user._id] = {
@@ -358,6 +377,54 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleToggleLiveMeetUser = (userId) => {
+    setLiveMeetConfig((prev) => {
+      const exists = prev.allowedUserIds.includes(userId);
+      return {
+        ...prev,
+        allowedUserIds: exists
+          ? prev.allowedUserIds.filter((entry) => entry !== userId)
+          : [...prev.allowedUserIds, userId],
+      };
+    });
+  };
+
+  const handleSaveLiveMeetConfig = async () => {
+    if (liveMeetConfig.isActive && !String(liveMeetConfig.meetingUrl || '').trim()) {
+      toast.error('Google Meet link is required when live meet is active');
+      return;
+    }
+
+    if (liveMeetConfig.isActive && liveMeetConfig.audience === 'selected' && liveMeetConfig.allowedUserIds.length === 0) {
+      toast.error('Select at least one user for restricted live meet');
+      return;
+    }
+
+    setSavingLiveMeet(true);
+    try {
+      const { data } = await adminAPI.updateLiveMeet({
+        meetingUrl: String(liveMeetConfig.meetingUrl || '').trim(),
+        audience: liveMeetConfig.audience,
+        allowedUserIds: liveMeetConfig.audience === 'selected' ? liveMeetConfig.allowedUserIds : [],
+        isActive: liveMeetConfig.isActive,
+      });
+
+      setLiveMeetConfig({
+        meetingUrl: data?.liveMeet?.meetingUrl || '',
+        audience: data?.liveMeet?.audience || 'all',
+        allowedUserIds: Array.isArray(data?.liveMeet?.allowedUsers)
+          ? data.liveMeet.allowedUsers.map((entry) => entry._id)
+          : [],
+        isActive: Boolean(data?.liveMeet?.isActive),
+      });
+      toast.success('Live meet setup saved');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Unable to save live meet setup');
+    } finally {
+      setSavingLiveMeet(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="admin-loader-screen">
@@ -397,6 +464,87 @@ const AdminDashboard = () => {
                 <h2>Dashboard Overview</h2>
               </div>
               <p>Core metrics for users, plans, and goal adoption.</p>
+            </div>
+
+            <div className="admin-live-meet-section">
+              <div className="admin-user-rows-head">
+                <h3>
+                  <Video size={16} />
+                  Live Google Meet Setup
+                </h3>
+                <span>{liveMeetConfig.isActive ? 'Live: ON' : 'Live: OFF'}</span>
+              </div>
+
+              <div className="admin-live-meet-card">
+                <label className="admin-live-field">
+                  <span>Google Meet Link</span>
+                  <input
+                    type="url"
+                    placeholder="https://meet.google.com/abc-defg-hij"
+                    value={liveMeetConfig.meetingUrl}
+                    onChange={(event) => setLiveMeetConfig((prev) => ({ ...prev, meetingUrl: event.target.value }))}
+                  />
+                </label>
+
+                <div className="admin-live-toggle-row">
+                  <label className="admin-live-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={liveMeetConfig.isActive}
+                      onChange={(event) => setLiveMeetConfig((prev) => ({ ...prev, isActive: event.target.checked }))}
+                    />
+                    <span>Enable live meet now</span>
+                  </label>
+                </div>
+
+                <label className="admin-live-field">
+                  <span>Who can join</span>
+                  <select
+                    value={liveMeetConfig.audience}
+                    onChange={(event) => setLiveMeetConfig((prev) => ({ ...prev, audience: event.target.value }))}
+                  >
+                    <option value="all">All users can join</option>
+                    <option value="selected">Only selected users can join</option>
+                  </select>
+                </label>
+
+                {liveMeetConfig.audience === 'selected' && (
+                  <div className="admin-live-users-grid">
+                    {overviewUsers.map((entry) => (
+                      <label key={entry._id} className="admin-live-user-item">
+                        <input
+                          type="checkbox"
+                          checked={liveMeetConfig.allowedUserIds.includes(entry._id)}
+                          onChange={() => handleToggleLiveMeetUser(entry._id)}
+                        />
+                        <span>{entry.firstName} {entry.lastName}</span>
+                        <small>{String(entry.email || '').toLowerCase()}</small>
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                <div className="admin-live-actions">
+                  <button
+                    type="button"
+                    className="admin-primary-button"
+                    onClick={handleSaveLiveMeetConfig}
+                    disabled={savingLiveMeet}
+                  >
+                    {savingLiveMeet ? 'Saving...' : 'Save Live Meet Setup'}
+                  </button>
+                  {liveMeetConfig.meetingUrl && (
+                    <a
+                      href={liveMeetConfig.meetingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="admin-workout-open-link"
+                    >
+                      <Link size={12} /> Open Meet Link
+                    </a>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="admin-metric-grid">
@@ -480,6 +628,7 @@ const AdminDashboard = () => {
                 </div>
               )}
             </div>
+
           </section>
         )}
 
