@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import {
   Flame, Zap, Trophy, TrendingUp, Calendar,
   Dumbbell, Activity, Target, Play, CheckCircle2,
-  BarChart3, Clock, ExternalLink, X, ClipboardList,
+  BarChart3, ChevronLeft, ChevronRight, Clock, ExternalLink, X, ClipboardList,
 } from 'lucide-react';
 import AssignedFoodPlanViewer from '../components/AssignedFoodPlanViewer';
 import './Dashboard.css';
@@ -102,6 +102,21 @@ const quickAccessLinks = {
   classSchedule: 'https://api.leadconnectorhq.com/widget/bookings/twc-session-sign-up',
 };
 
+const getDefaultWorkoutDayIndex = (workoutPlan) => {
+  const days = Array.isArray(workoutPlan?.days) ? workoutPlan.days : [];
+  if (days.length === 0) {
+    return 0;
+  }
+
+  if (workoutPlan?.type === 'daily') {
+    return 0;
+  }
+
+  const todayDayNumber = ((new Date().getDay() + 6) % 7) + 1;
+  const todayIndex = days.findIndex((day) => Number(day.dayNumber) === todayDayNumber);
+  return todayIndex >= 0 ? todayIndex : 0;
+};
+
 const Dashboard = () => {
   const { user, stats, refreshStats } = useAuth();
   const [loggingWorkout, setLoggingWorkout] = useState(null);
@@ -111,6 +126,7 @@ const Dashboard = () => {
   const [activeQuickWorkout, setActiveQuickWorkout] = useState(null);
   const [assignedPlans, setAssignedPlans] = useState({ workoutPlan: null, foodPlans: [] });
   const [completedWorkoutIds, setCompletedWorkoutIds] = useState([]);
+  const [selectedWorkoutDayIndex, setSelectedWorkoutDayIndex] = useState(0);
 
   useEffect(() => {
     refreshStats();
@@ -119,6 +135,10 @@ const Dashboard = () => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, [refreshStats]);
+
+  useEffect(() => {
+    setSelectedWorkoutDayIndex(getDefaultWorkoutDayIndex(assignedPlans.workoutPlan));
+  }, [assignedPlans.workoutPlan]);
 
   const fetchAssignedPlans = async () => {
     try {
@@ -240,26 +260,38 @@ const Dashboard = () => {
     },
   ];
 
-  const assignedWorkoutItems = (assignedPlans.workoutPlan?.days || [])
-    .flatMap((day) => (day.workouts || []).map((workout, index) => {
+  const workoutDays = assignedPlans.workoutPlan?.days || [];
+  const safeSelectedWorkoutDayIndex = workoutDays.length === 0
+    ? 0
+    : Math.min(selectedWorkoutDayIndex, workoutDays.length - 1);
+  const selectedWorkoutDay = workoutDays[safeSelectedWorkoutDayIndex] || null;
+  const todayDayNumber = ((new Date().getDay() + 6) % 7) + 1;
+  const selectedDayNumber = Number(selectedWorkoutDay?.dayNumber || 0);
+  const isTodaySelected = selectedDayNumber === todayDayNumber;
+  const workoutDayLabel = assignedPlans.workoutPlan?.type === 'daily'
+    ? 'Today Workout'
+    : (isTodaySelected ? `Day ${selectedDayNumber} (Today)` : `Day ${selectedDayNumber}`);
+
+  const assignedWorkoutItems = ((selectedWorkoutDay?.workouts) || [])
+    .map((workout, index) => {
       const minutes = durationToMinutes(workout.duration);
       const estimatedCalories = minutes > 0 ? minutes * 8 : 150;
       // Use stored youtubeId if available, otherwise extract from videoUrl
       const youtubeId = workout.youtubeId || extractYouTubeIdFromUrl(workout.videoUrl);
 
       return {
-        id: `${day.dayNumber}-${index}`,
+        id: `${selectedWorkoutDay?.dayNumber || 0}-${index}`,
         name: workout.title || `Workout ${index + 1}`,
-        duration: workout.duration || `Day ${day.dayNumber}`,
+        duration: workout.duration || `Day ${selectedWorkoutDay?.dayNumber || 0}`,
         calories: estimatedCalories,
         level: formatLevel(user?.fitnessLevel || 'beginner'),
-        dayNumber: day.dayNumber,
+        dayNumber: selectedWorkoutDay?.dayNumber || 0,
         planName: assignedPlans.workoutPlan?.name || '',
         videoUrl: workout.videoUrl || '',
         youtubeId,
         thumbnailUrl: youtubeId ? `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg` : '',
       };
-    }))
+    })
     .slice(0, 8);
 
   return (
@@ -316,6 +348,7 @@ const Dashboard = () => {
               key={stat.label}
               className="stat-card"
               variants={cardVariants}
+              style={{ borderTopColor: stat.color }}
               whileHover={{ y: -6, boxShadow: `0 0 40px ${stat.color}28, 0 20px 40px rgba(0,0,0,0.4)` }}
               transition={{ type: 'spring', stiffness: 300 }}
             >
@@ -339,7 +372,7 @@ const Dashboard = () => {
         </div>
 
         {/* Weekly Goal */}
-        <motion.div className="dash-card" variants={cardVariants}>
+        <motion.div className="dash-card dash-card--purple" variants={cardVariants}>
           <div className="card-header">
             <h3 className="card-title">
               <Calendar size={18} />
@@ -409,7 +442,7 @@ const Dashboard = () => {
         </motion.div>
 
         {(assignedPlans.workoutPlan || assignedPlans.foodPlans.length > 0) && (
-          <motion.div className="dash-card" variants={cardVariants}>
+          <motion.div className="dash-card dash-card--teal" variants={cardVariants}>
             <div className="card-header">
               <h3 className="card-title">
                 <ClipboardList size={18} />
@@ -418,85 +451,130 @@ const Dashboard = () => {
               <span className="card-hint">Customized by your coach/admin</span>
             </div>
 
-            <div className="assigned-plans-grid">
+            <div className="assigned-sections">
               {assignedPlans.workoutPlan && (
-                <article className="assigned-plan-card">
-                  <h4>
-                    <Dumbbell size={15} />
-                    {assignedPlans.workoutPlan.name}
-                  </h4>
-                  <p>{assignedPlans.workoutPlan.type === 'daily' ? 'Daily' : 'Weekly'} workout plan</p>
-                  <div className="assigned-plan-meta">
-                    <span>{assignedPlans.workoutPlan.numberOfDays || assignedPlans.workoutPlan.days?.length || 0} days</span>
-                    <span>{assignedPlans.workoutPlan.totalWorkouts || 0} workouts</span>
+                <section className="assigned-section assigned-section--workout">
+                  <div className="assigned-section-head">
+                    <h4>
+                      <Dumbbell size={15} />
+                      Workout Plan
+                    </h4>
                   </div>
-                </article>
+
+                  <div className="assigned-plans-grid">
+                    <article className="assigned-plan-card">
+                      <h4>
+                        <Dumbbell size={15} />
+                        {assignedPlans.workoutPlan.name}
+                      </h4>
+                      <p>{assignedPlans.workoutPlan.type === 'daily' ? 'Daily' : 'Weekly'} workout plan</p>
+                      <div className="assigned-plan-meta">
+                        <span>{assignedPlans.workoutPlan.numberOfDays || assignedPlans.workoutPlan.days?.length || 0} days</span>
+                        <span>{assignedPlans.workoutPlan.totalWorkouts || 0} workouts</span>
+                      </div>
+                    </article>
+                  </div>
+
+                  {workoutDays.length > 0 && (
+                    <div className="workout-day-nav">
+                      <button
+                        type="button"
+                        className="workout-day-btn"
+                        onClick={() => setSelectedWorkoutDayIndex((prev) => Math.max(prev - 1, 0))}
+                        disabled={safeSelectedWorkoutDayIndex === 0}
+                      >
+                        <ChevronLeft size={15} />
+                        Previous
+                      </button>
+                      <div className="workout-day-label">{workoutDayLabel}</div>
+                      <button
+                        type="button"
+                        className="workout-day-btn"
+                        onClick={() => setSelectedWorkoutDayIndex((prev) => Math.min(prev + 1, workoutDays.length - 1))}
+                        disabled={safeSelectedWorkoutDayIndex >= workoutDays.length - 1}
+                      >
+                        Next
+                        <ChevronRight size={15} />
+                      </button>
+                    </div>
+                  )}
+
+                  {assignedWorkoutItems.length > 0 ? (
+                    <div className="workouts-grid">
+                      {assignedWorkoutItems.map((workout, i) => {
+                      const isCompleted = completedWorkoutIds.includes(String(workout.id));
+                      return (
+                        <motion.div
+                          key={workout.id}
+                          className="workout-card"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.3 + i * 0.1 }}
+                          whileHover={{ scale: 1.02, borderColor: '#E8522A88' }}
+                          onClick={() => openQuickWorkoutModal(workout)}
+                        >
+                          <div className="workout-thumb-wrap">
+                            {workout.thumbnailUrl ? (
+                              <img className="workout-thumb-img" src={workout.thumbnailUrl} alt={workout.name} loading="lazy" />
+                            ) : (
+                              <div className="workout-thumb-fallback">
+                                <Dumbbell size={20} />
+                              </div>
+                            )}
+                          </div>
+                          <div className="workout-info">
+                            <h4 className="workout-name">{workout.name}</h4>
+                            <div className="workout-meta">
+                              <span><Clock size={12} /> {workout.duration}</span>
+                              <span><Flame size={12} /> {workout.calories} kcal</span>
+                              <span className={`workout-level level-${workout.level.toLowerCase()}`}>
+                                {workout.level}
+                              </span>
+                            </div>
+                          </div>
+                          <motion.button
+                            className={`btn-log ${isCompleted ? 'is-completed' : ''}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              if (isCompleted) {
+                                return;
+                              }
+                              openQuickWorkoutModal(workout);
+                            }}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            {isCompleted ? (
+                              <>
+                                <CheckCircle2 size={14} />
+                                <span className="btn-log-label">Completed</span>
+                              </>
+                            ) : (
+                              <Play size={16} fill="currentColor" />
+                            )}
+                          </motion.button>
+                        </motion.div>
+                      );
+                      })}
+                    </div>
+                  ) : (
+                    workoutDays.length > 0 && <p className="workout-day-empty">No workouts assigned for this day.</p>
+                  )}
+                </section>
+              )}
+
+              {assignedPlans.foodPlans.length > 0 && (
+                <section className="assigned-section assigned-section--food">
+                  <div className="assigned-section-head">
+                    <h4>
+                      <Target size={15} />
+                      Food Plan
+                    </h4>
+                  </div>
+                  <AssignedFoodPlanViewer foodPlans={assignedPlans.foodPlans} />
+                </section>
               )}
             </div>
-
-            {assignedWorkoutItems.length > 0 && (
-              <div className="workouts-grid">
-                {assignedWorkoutItems.map((workout, i) => {
-                const isCompleted = completedWorkoutIds.includes(String(workout.id));
-                return (
-                  <motion.div
-                    key={workout.id}
-                    className="workout-card"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 + i * 0.1 }}
-                    whileHover={{ scale: 1.02, borderColor: '#E8522A88' }}
-                    onClick={() => openQuickWorkoutModal(workout)}
-                  >
-                    <div className="workout-thumb-wrap">
-                      {workout.thumbnailUrl ? (
-                        <img className="workout-thumb-img" src={workout.thumbnailUrl} alt={workout.name} loading="lazy" />
-                      ) : (
-                        <div className="workout-thumb-fallback">
-                          <Dumbbell size={20} />
-                        </div>
-                      )}
-                    </div>
-                    <div className="workout-info">
-                      <h4 className="workout-name">{workout.name}</h4>
-                      <div className="workout-meta">
-                        <span><Clock size={12} /> {workout.duration}</span>
-                        <span><Flame size={12} /> {workout.calories} kcal</span>
-                        <span className={`workout-level level-${workout.level.toLowerCase()}`}>
-                          {workout.level}
-                        </span>
-                      </div>
-                    </div>
-                    <motion.button
-                      className={`btn-log ${isCompleted ? 'is-completed' : ''}`}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        if (isCompleted) {
-                          return;
-                        }
-                        openQuickWorkoutModal(workout);
-                      }}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      {isCompleted ? (
-                        <>
-                          <CheckCircle2 size={14} />
-                          <span className="btn-log-label">Completed</span>
-                        </>
-                      ) : (
-                        <Play size={16} fill="currentColor" />
-                      )}
-                    </motion.button>
-                  </motion.div>
-                );
-                })}
-              </div>
-            )}
-
-            {assignedPlans.foodPlans.length > 0 && (
-              <AssignedFoodPlanViewer foodPlans={assignedPlans.foodPlans} />
-            )}
           </motion.div>
         )}
 
