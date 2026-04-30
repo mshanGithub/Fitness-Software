@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Dumbbell, LayoutDashboard, LogOut, Menu, ShieldCheck, Video, X } from 'lucide-react';
+import { CalendarDays, Dumbbell, LayoutDashboard, LogOut, Menu, ShieldCheck, Video, X } from 'lucide-react';
 import { userAPI } from '../services/api';
 import './Navbar.css';
 
@@ -38,7 +38,10 @@ const Navbar = () => {
 
   const navLinks = isAdmin
     ? [{ label: 'Admin Dashboard', path: '/admin/dashboard', icon: <ShieldCheck size={18} /> }]
-    : [{ label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> }];
+    : [
+      { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
+      { label: 'Book Session', path: '/book-session', icon: <CalendarDays size={18} /> },
+    ];
 
   const handleJoinLiveMeet = () => {
     if (!liveMeet?.meetingUrl) {

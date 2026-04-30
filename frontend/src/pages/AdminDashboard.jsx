@@ -4,12 +4,16 @@ import toast from 'react-hot-toast';
 import {
   Activity,
   BarChart3,
+  CalendarDays,
   Calendar,
   CheckCircle2,
   ClipboardList,
+  Clock3,
   Link,
+  Plus,
   Salad,
   Target,
+  Trash2,
   Users,
   Video,
   X,
@@ -19,6 +23,8 @@ import './AdminDashboard.css';
 
 const tabs = [
   { key: 'overview', label: 'Dashboard Overview', icon: <BarChart3 size={16} /> },
+  { key: 'liveMeet', label: 'Live Meet Setup', icon: <Video size={16} /> },
+  { key: 'sessionBooking', label: 'Session Booking', icon: <CalendarDays size={16} /> },
   { key: 'workout', label: 'Workout Plans', icon: <Activity size={16} /> },
   { key: 'food', label: 'Food Plans', icon: <Salad size={16} /> },
 ];
@@ -52,6 +58,21 @@ const cardLabels = {
   totalWorkoutPlans: 'Total Workout Plans',
   totalFoodPlans: 'Total Food Plans',
   fitnessGoalCount: 'Fitness Goal Count',
+};
+
+const defaultSessionBookingConfig = {
+  isActive: true,
+  sessionName: 'TWC: Strength + Core',
+  durationMinutes: 45,
+  description: 'Train with Cain adult strength training with a core focus.',
+  timezone: 'Asia/Calcutta',
+  slots: [
+    { time: '14:45', label: '02:45 PM', capacity: 10, isActive: true },
+    { time: '15:45', label: '03:45 PM', capacity: 7, isActive: true },
+    { time: '16:45', label: '04:45 PM', capacity: 10, isActive: true },
+    { time: '19:00', label: '07:00 PM', capacity: 8, isActive: true },
+  ],
+  blockedDates: [],
 };
 
 const toTitleText = (value = '') => String(value || '').replace(/_/g, ' ');
@@ -115,6 +136,11 @@ const AdminDashboard = () => {
     isActive: false,
   });
   const [savingLiveMeet, setSavingLiveMeet] = useState(false);
+  const [sessionBookingConfig, setSessionBookingConfig] = useState(defaultSessionBookingConfig);
+  const [blockedDateDraft, setBlockedDateDraft] = useState('');
+  const [savingSessionBooking, setSavingSessionBooking] = useState(false);
+  const [showSlotsSection, setShowSlotsSection] = useState(false);
+  const [allSessionBookings, setAllSessionBookings] = useState([]);
 
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [creatingPlan, setCreatingPlan] = useState(false);
@@ -136,6 +162,8 @@ const AdminDashboard = () => {
         { data: foodPlansData },
         { data: videosData },
         { data: liveMeetData },
+        { data: sessionBookingData },
+        { data: allBookingsData },
       ] = await Promise.all([
         adminAPI.getOverview(),
         adminAPI.getUsers(),
@@ -143,6 +171,8 @@ const AdminDashboard = () => {
         adminAPI.getFoodPlans(),
         adminAPI.getVideos(),
         adminAPI.getLiveMeet(),
+        adminAPI.getSessionBookingSettings(),
+        adminAPI.getAllSessionBookings(),
       ]);
 
       setOverview({
@@ -161,6 +191,17 @@ const AdminDashboard = () => {
           : [],
         isActive: Boolean(liveMeetData?.liveMeet?.isActive),
       });
+      setSessionBookingConfig({
+        ...defaultSessionBookingConfig,
+        ...(sessionBookingData?.config || {}),
+        slots: Array.isArray(sessionBookingData?.config?.slots)
+          ? sessionBookingData.config.slots
+          : defaultSessionBookingConfig.slots,
+        blockedDates: Array.isArray(sessionBookingData?.config?.blockedDates)
+          ? sessionBookingData.config.blockedDates
+          : [],
+      });
+      setAllSessionBookings(allBookingsData?.bookings || []);
       setAssignmentDrafts(
         (usersData || []).reduce((accumulator, user) => {
           accumulator[user._id] = {
@@ -425,6 +466,93 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleSessionSlotFieldChange = (index, field, value) => {
+    setSessionBookingConfig((prev) => {
+      const nextSlots = [...(prev.slots || [])];
+      nextSlots[index] = {
+        ...nextSlots[index],
+        [field]: field === 'capacity' ? Math.max(Number(value) || 1, 1) : value,
+      };
+      return { ...prev, slots: nextSlots };
+    });
+  };
+
+  const handleAddSessionSlot = () => {
+    setSessionBookingConfig((prev) => ({
+      ...prev,
+      slots: [...(prev.slots || []), { time: '18:00', label: '06:00 PM', capacity: 10, isActive: true }],
+    }));
+  };
+
+  const handleRemoveSessionSlot = (index) => {
+    setSessionBookingConfig((prev) => ({
+      ...prev,
+      slots: (prev.slots || []).filter((_, itemIndex) => itemIndex !== index),
+    }));
+  };
+
+  const handleAddBlockedDate = () => {
+    const dateValue = String(blockedDateDraft || '').trim();
+    if (!dateValue) {
+      return;
+    }
+
+    setSessionBookingConfig((prev) => ({
+      ...prev,
+      blockedDates: Array.from(new Set([...(prev.blockedDates || []), dateValue])).sort(),
+    }));
+    setBlockedDateDraft('');
+  };
+
+  const handleRemoveBlockedDate = (dateValue) => {
+    setSessionBookingConfig((prev) => ({
+      ...prev,
+      blockedDates: (prev.blockedDates || []).filter((entry) => entry !== dateValue),
+    }));
+  };
+
+  const handleSaveSessionBookingSettings = async () => {
+    if (!sessionBookingConfig.sessionName.trim()) {
+      toast.error('Session name is required');
+      return;
+    }
+
+    if (!sessionBookingConfig.slots || sessionBookingConfig.slots.length === 0) {
+      toast.error('Add at least one booking slot');
+      return;
+    }
+
+    setSavingSessionBooking(true);
+    try {
+      const { data } = await adminAPI.updateSessionBookingSettings({
+        isActive: sessionBookingConfig.isActive,
+        sessionName: sessionBookingConfig.sessionName,
+        durationMinutes: Number(sessionBookingConfig.durationMinutes) || 45,
+        description: sessionBookingConfig.description,
+        timezone: sessionBookingConfig.timezone,
+        slots: (sessionBookingConfig.slots || []).map((slot) => ({
+          time: String(slot.time || '').trim(),
+          label: String(slot.label || '').trim(),
+          capacity: Math.max(Number(slot.capacity) || 1, 1),
+          isActive: slot.isActive !== false,
+        })),
+        blockedDates: sessionBookingConfig.blockedDates || [],
+      });
+
+      setSessionBookingConfig({
+        ...defaultSessionBookingConfig,
+        ...(data?.config || {}),
+        slots: Array.isArray(data?.config?.slots) ? data.config.slots : defaultSessionBookingConfig.slots,
+        blockedDates: Array.isArray(data?.config?.blockedDates) ? data.config.blockedDates : [],
+      });
+      toast.success('Session booking settings saved');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Unable to save booking settings');
+    } finally {
+      setSavingSessionBooking(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="admin-loader-screen">
@@ -464,87 +592,6 @@ const AdminDashboard = () => {
                 <h2>Dashboard Overview</h2>
               </div>
               <p>Core metrics for users, plans, and goal adoption.</p>
-            </div>
-
-            <div className="admin-live-meet-section">
-              <div className="admin-user-rows-head">
-                <h3>
-                  <Video size={16} />
-                  Live Google Meet Setup
-                </h3>
-                <span>{liveMeetConfig.isActive ? 'Live: ON' : 'Live: OFF'}</span>
-              </div>
-
-              <div className="admin-live-meet-card">
-                <label className="admin-live-field">
-                  <span>Google Meet Link</span>
-                  <input
-                    type="url"
-                    placeholder="https://meet.google.com/abc-defg-hij"
-                    value={liveMeetConfig.meetingUrl}
-                    onChange={(event) => setLiveMeetConfig((prev) => ({ ...prev, meetingUrl: event.target.value }))}
-                  />
-                </label>
-
-                <div className="admin-live-toggle-row">
-                  <label className="admin-live-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={liveMeetConfig.isActive}
-                      onChange={(event) => setLiveMeetConfig((prev) => ({ ...prev, isActive: event.target.checked }))}
-                    />
-                    <span>Enable live meet now</span>
-                  </label>
-                </div>
-
-                <label className="admin-live-field">
-                  <span>Who can join</span>
-                  <select
-                    value={liveMeetConfig.audience}
-                    onChange={(event) => setLiveMeetConfig((prev) => ({ ...prev, audience: event.target.value }))}
-                  >
-                    <option value="all">All users can join</option>
-                    <option value="selected">Only selected users can join</option>
-                  </select>
-                </label>
-
-                {liveMeetConfig.audience === 'selected' && (
-                  <div className="admin-live-users-grid">
-                    {overviewUsers.map((entry) => (
-                      <label key={entry._id} className="admin-live-user-item">
-                        <input
-                          type="checkbox"
-                          checked={liveMeetConfig.allowedUserIds.includes(entry._id)}
-                          onChange={() => handleToggleLiveMeetUser(entry._id)}
-                        />
-                        <span>{entry.firstName} {entry.lastName}</span>
-                        <small>{String(entry.email || '').toLowerCase()}</small>
-                      </label>
-                    ))}
-                  </div>
-                )}
-
-                <div className="admin-live-actions">
-                  <button
-                    type="button"
-                    className="admin-primary-button"
-                    onClick={handleSaveLiveMeetConfig}
-                    disabled={savingLiveMeet}
-                  >
-                    {savingLiveMeet ? 'Saving...' : 'Save Live Meet Setup'}
-                  </button>
-                  {liveMeetConfig.meetingUrl && (
-                    <a
-                      href={liveMeetConfig.meetingUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="admin-workout-open-link"
-                    >
-                      <Link size={12} /> Open Meet Link
-                    </a>
-                  )}
-                </div>
-              </div>
             </div>
 
             <div className="admin-metric-grid">
@@ -629,6 +676,99 @@ const AdminDashboard = () => {
               )}
             </div>
 
+          </section>
+        )}
+
+        {activeTab === 'liveMeet' && (
+          <section className="admin-panel">
+            <div className="admin-section-head">
+              <div>
+                <span className="admin-panel-tag">Live Session</span>
+                <h2>Live Google Meet Setup</h2>
+              </div>
+              <p>Configure meet link, audience access, and live status from this dedicated section.</p>
+            </div>
+
+            <div className="admin-live-meet-section">
+              <div className="admin-user-rows-head">
+                <h3>
+                  <Video size={16} />
+                  Live Google Meet Setup
+                </h3>
+                <span>{liveMeetConfig.isActive ? 'Live: ON' : 'Live: OFF'}</span>
+              </div>
+
+              <div className="admin-live-meet-card">
+                <label className="admin-live-field">
+                  <span>Google Meet Link</span>
+                  <input
+                    type="url"
+                    placeholder="https://meet.google.com/abc-defg-hij"
+                    value={liveMeetConfig.meetingUrl}
+                    onChange={(event) => setLiveMeetConfig((prev) => ({ ...prev, meetingUrl: event.target.value }))}
+                  />
+                </label>
+
+                <div className="admin-live-toggle-row">
+                  <label className="admin-live-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={liveMeetConfig.isActive}
+                      onChange={(event) => setLiveMeetConfig((prev) => ({ ...prev, isActive: event.target.checked }))}
+                    />
+                    <span>Enable live meet now</span>
+                  </label>
+                </div>
+
+                <label className="admin-live-field">
+                  <span>Who can join</span>
+                  <select
+                    value={liveMeetConfig.audience}
+                    onChange={(event) => setLiveMeetConfig((prev) => ({ ...prev, audience: event.target.value }))}
+                  >
+                    <option value="all">All users can join</option>
+                    <option value="selected">Only selected users can join</option>
+                  </select>
+                </label>
+
+                {liveMeetConfig.audience === 'selected' && (
+                  <div className="admin-live-users-grid">
+                    {overviewUsers.map((entry) => (
+                      <label key={entry._id} className="admin-live-user-item">
+                        <input
+                          type="checkbox"
+                          checked={liveMeetConfig.allowedUserIds.includes(entry._id)}
+                          onChange={() => handleToggleLiveMeetUser(entry._id)}
+                        />
+                        <span>{entry.firstName} {entry.lastName}</span>
+                        <small>{String(entry.email || '').toLowerCase()}</small>
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                <div className="admin-live-actions">
+                  <button
+                    type="button"
+                    className="admin-primary-button"
+                    onClick={handleSaveLiveMeetConfig}
+                    disabled={savingLiveMeet}
+                  >
+                    {savingLiveMeet ? 'Saving...' : 'Save Live Meet Setup'}
+                  </button>
+                  {liveMeetConfig.meetingUrl && (
+                    <a
+                      href={liveMeetConfig.meetingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="admin-workout-open-link"
+                    >
+                      <Link size={12} /> Open Meet Link
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
           </section>
         )}
 
@@ -779,6 +919,242 @@ const AdminDashboard = () => {
                 ))}
               </div>
             </article>
+          </section>
+        )}
+
+        {activeTab === 'sessionBooking' && (
+          <section className="admin-panel">
+            <div className="admin-section-head">
+              <div>
+                <span className="admin-panel-tag">Booking Configuration</span>
+                <h2>Session Booking Controls</h2>
+              </div>
+              <p>Manage slot times, capacities, and blocked dates from this dedicated section.</p>
+            </div>
+
+            {/* ── Booked Users List ── */}
+            <div className="admin-session-booking-section admin-bookings-list-section">
+              <div className="admin-user-rows-head">
+                <h3>
+                  <CalendarDays size={16} />
+                  Booked Sessions
+                </h3>
+                <span>{allSessionBookings.length} booking(s)</span>
+              </div>
+              {allSessionBookings.length === 0 ? (
+                <p className="admin-bookings-empty">No bookings yet.</p>
+              ) : (
+                <div className="admin-bookings-table-wrap">
+                  <table className="admin-bookings-table">
+                    <thead>
+                      <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Date</th>
+                        <th>Slot</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allSessionBookings.map((booking) => {
+                        const isToday = booking.bookingDate === new Date().toISOString().slice(0, 10);
+                        return (
+                          <tr key={booking._id} className={isToday ? 'admin-booking-row--today' : ''}>
+                            <td>{booking.user?.name || '—'}</td>
+                            <td>{booking.user?.email || '—'}</td>
+                            <td>
+                              {booking.bookingDate}
+                              {isToday && <span className="admin-booking-today-badge">Today</span>}
+                            </td>
+                            <td>{booking.slotLabel || booking.slotTime}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div className="admin-session-booking-section">
+              <div className="admin-user-rows-head">
+                <h3>
+                  <CalendarDays size={16} />
+                  Session Booking Controls
+                </h3>
+                <span>{sessionBookingConfig.isActive ? 'Booking: ON' : 'Booking: OFF'}</span>
+              </div>
+
+              <div className="admin-session-booking-card">
+                <div className="admin-live-toggle-row">
+                  <label className="admin-live-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={sessionBookingConfig.isActive}
+                      onChange={(event) => setSessionBookingConfig((prev) => ({ ...prev, isActive: event.target.checked }))}
+                    />
+                    <span>Enable session booking</span>
+                  </label>
+                </div>
+
+                <div className="admin-session-grid-two">
+                  <label className="admin-live-field">
+                    <span>Session Name</span>
+                    <input
+                      type="text"
+                      value={sessionBookingConfig.sessionName}
+                      onChange={(event) => setSessionBookingConfig((prev) => ({ ...prev, sessionName: event.target.value }))}
+                    />
+                  </label>
+
+                  <label className="admin-live-field">
+                    <span>Duration (minutes)</span>
+                    <input
+                      type="number"
+                      min="15"
+                      max="240"
+                      value={sessionBookingConfig.durationMinutes}
+                      onChange={(event) => setSessionBookingConfig((prev) => ({ ...prev, durationMinutes: event.target.value }))}
+                    />
+                  </label>
+                </div>
+
+                <label className="admin-live-field">
+                  <span>Description</span>
+                  <input
+                    type="text"
+                    value={sessionBookingConfig.description}
+                    onChange={(event) => setSessionBookingConfig((prev) => ({ ...prev, description: event.target.value }))}
+                  />
+                </label>
+
+                <label className="admin-live-field">
+                  <span>Timezone</span>
+                  <input
+                    type="text"
+                    value={sessionBookingConfig.timezone}
+                    onChange={(event) => setSessionBookingConfig((prev) => ({ ...prev, timezone: event.target.value }))}
+                  />
+                </label>
+
+                <div className="admin-session-slots-head">
+                  <h4>
+                    <Clock3 size={14} />
+                    Slot Timings & Seats
+                  </h4>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    {showSlotsSection && (
+                      <button type="button" className="admin-secondary-button" onClick={handleAddSessionSlot}>
+                        <Plus size={13} />
+                        Add Slot
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="admin-secondary-button"
+                      onClick={() => setShowSlotsSection((prev) => !prev)}
+                    >
+                      {showSlotsSection ? 'Hide Slots' : 'Edit Slots'}
+                    </button>
+                  </div>
+                </div>
+
+                {showSlotsSection && <div className="admin-session-slots-list">
+                  {(sessionBookingConfig.slots || []).map((slot, index) => (
+                    <div className="admin-session-slot-item" key={`${slot.time || 'slot'}-${index}`}>
+                      <label className="admin-live-field">
+                        <span>Time (HH:mm)</span>
+                        <input
+                          type="time"
+                          value={slot.time || ''}
+                          onChange={(event) => handleSessionSlotFieldChange(index, 'time', event.target.value)}
+                        />
+                      </label>
+                      <label className="admin-live-field">
+                        <span>Label</span>
+                        <input
+                          type="text"
+                          value={slot.label || ''}
+                          onChange={(event) => handleSessionSlotFieldChange(index, 'label', event.target.value)}
+                        />
+                      </label>
+                      <label className="admin-live-field">
+                        <span>Seats</span>
+                        <input
+                          type="number"
+                          min="1"
+                          max="100"
+                          value={slot.capacity || 1}
+                          onChange={(event) => handleSessionSlotFieldChange(index, 'capacity', event.target.value)}
+                        />
+                      </label>
+                      <label className="admin-live-checkbox admin-slot-active-toggle">
+                        <input
+                          type="checkbox"
+                          checked={slot.isActive !== false}
+                          onChange={(event) => handleSessionSlotFieldChange(index, 'isActive', event.target.checked)}
+                        />
+                        <span>Active</span>
+                      </label>
+                      <button
+                        type="button"
+                        className="admin-danger-button"
+                        onClick={() => handleRemoveSessionSlot(index)}
+                      >
+                        <Trash2 size={13} />
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>}
+
+                <div className="admin-session-slots-head">
+                  <h4>
+                    <CalendarDays size={14} />
+                    Blocked Dates
+                  </h4>
+                </div>
+
+                <div className="admin-blocked-dates-add">
+                  <input
+                    type="date"
+                    value={blockedDateDraft}
+                    onChange={(event) => setBlockedDateDraft(event.target.value)}
+                  />
+                  <button type="button" className="admin-secondary-button" onClick={handleAddBlockedDate}>
+                    Add Blocked Date
+                  </button>
+                </div>
+
+                <div className="admin-blocked-dates-list">
+                  {(sessionBookingConfig.blockedDates || []).length === 0 && (
+                    <span className="admin-blocked-date-empty">No blocked dates</span>
+                  )}
+                  {(sessionBookingConfig.blockedDates || []).map((dateValue) => (
+                    <button
+                      key={dateValue}
+                      type="button"
+                      className="admin-blocked-date-chip"
+                      onClick={() => handleRemoveBlockedDate(dateValue)}
+                      title="Remove blocked date"
+                    >
+                      {dateValue}
+                      <X size={12} />
+                    </button>
+                  ))}
+                </div>
+
+                <div className="admin-live-actions">
+                  <button
+                    type="button"
+                    className="admin-primary-button"
+                    onClick={handleSaveSessionBookingSettings}
+                    disabled={savingSessionBooking}
+                  >
+                    {savingSessionBooking ? 'Saving...' : 'Save Booking Settings'}
+                  </button>
+                </div>
+              </div>
+            </div>
           </section>
         )}
 

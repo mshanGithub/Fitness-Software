@@ -66,6 +66,11 @@ export const userAPI = {
   getStats: () => api.get('/user/stats'),
   getWorkoutReport: () => api.get('/user/workout-report'),
   getLiveMeet: () => api.get('/user/live-meet'),
+  getSessionBookingAvailability: (date) => api.get('/user/session-booking/availability', { params: { date } }),
+  bookSessionSlot: (data) => api.post('/user/session-booking/book', data),
+  getMySessionBookings: () => api.get('/user/session-booking/my'),
+  rescheduleSessionBooking: (bookingId, data) => api.put(`/user/session-booking/reschedule/${bookingId}`, data),
+  cancelSessionBooking: (bookingId) => api.delete(`/user/session-booking/${bookingId}`),
   logWorkout: (data) => api.post('/user/log-workout', data),
 };
 
@@ -78,6 +83,9 @@ export const adminAPI = {
   getUsers: () => api.get('/admin/users'),
   getLiveMeet: () => api.get('/admin/live-meet'),
   updateLiveMeet: (data) => api.put('/admin/live-meet', data),
+  getSessionBookingSettings: () => api.get('/admin/session-booking-settings'),
+  updateSessionBookingSettings: (data) => api.put('/admin/session-booking-settings', data),
+  getAllSessionBookings: () => api.get('/admin/session-bookings'),
   updateUser: (userId, data) => api.put(`/admin/users/${userId}`, data),
   updateUserAssignments: (userId, data) => api.put(`/admin/users/${userId}/assignments`, data),
 

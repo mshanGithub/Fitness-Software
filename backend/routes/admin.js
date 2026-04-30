@@ -5,9 +5,16 @@ const WorkoutVideo = require('../models/WorkoutVideo');
 const WorkoutPlan = require('../models/WorkoutPlan');
 const FoodPlan = require('../models/FoodPlan');
 const LiveMeet = require('../models/LiveMeet');
+const SessionBookingConfig = require('../models/SessionBookingConfig');
+const WorkoutSessionBooking = require('../models/WorkoutSessionBooking');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 const { WORKOUT_CATEGORY_OPTIONS, WORKOUT_CATEGORY_VALUES } = require('../config/workoutCategories');
 const { PREDEFINED_FOOD_PLANS } = require('../config/predefinedFoodPlans');
+const {
+  DEFAULT_SESSION_BOOKING_CONFIG,
+  TIME_PATTERN,
+  normalizeTimeToLabel,
+} = require('../config/sessionBookingDefaults');
 
 const router = express.Router();
 
@@ -60,6 +67,52 @@ const isValidGoogleMeetUrl = (input = '') => {
   } catch {
     return false;
   }
+};
+
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+const isValidDateString = (value = '') => {
+  const normalized = String(value || '').trim();
+  if (!DATE_PATTERN.test(normalized)) {
+    return false;
+  }
+
+  const parsed = new Date(`${normalized}T00:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime())) {
+    return false;
+  }
+
+  return parsed.toISOString().slice(0, 10) === normalized;
+};
+
+const buildBookingSettingsResponse = (configDoc) => {
+  const source = configDoc?.toObject ? configDoc.toObject() : (configDoc || {});
+  const slots = Array.isArray(source.slots) && source.slots.length > 0
+    ? source.slots
+    : DEFAULT_SESSION_BOOKING_CONFIG.slots;
+
+  return {
+    isActive: typeof source.isActive === 'boolean' ? source.isActive : DEFAULT_SESSION_BOOKING_CONFIG.isActive,
+    sessionName: source.sessionName || DEFAULT_SESSION_BOOKING_CONFIG.sessionName,
+    durationMinutes: Number(source.durationMinutes || DEFAULT_SESSION_BOOKING_CONFIG.durationMinutes),
+    description: source.description || DEFAULT_SESSION_BOOKING_CONFIG.description,
+    timezone: source.timezone || DEFAULT_SESSION_BOOKING_CONFIG.timezone,
+    slots: slots
+      .map((slot) => ({
+        time: String(slot.time || '').trim(),
+        label: String(slot.label || normalizeTimeToLabel(slot.time || '')).trim(),
+        capacity: Math.max(Number(slot.capacity) || 1, 1),
+        isActive: slot.isActive !== false,
+      }))
+      .filter((slot) => TIME_PATTERN.test(slot.time))
+      .sort((a, b) => a.time.localeCompare(b.time)),
+    blockedDates: Array.from(new Set(
+      (Array.isArray(source.blockedDates) ? source.blockedDates : [])
+        .map((entry) => String(entry || '').trim())
+        .filter((entry) => isValidDateString(entry))
+    )).sort(),
+    updatedAt: source.updatedAt || null,
+  };
 };
 
 const normalizePlanDays = (days = []) => {
@@ -210,6 +263,107 @@ router.put(
     }
   }
 );
+
+router.get('/session-booking-settings', async (req, res) => {
+  try {
+    const config = await SessionBookingConfig.findOne().sort({ updatedAt: -1 });
+    return res.status(200).json({ config: buildBookingSettingsResponse(config) });
+  } catch (error) {
+    console.error('Admin session booking settings fetch error:', error);
+    return res.status(500).json({ message: 'Unable to load booking settings' });
+  }
+});
+
+router.put(
+  '/session-booking-settings',
+  [
+    body('sessionName').optional().trim().isLength({ min: 2, max: 100 }),
+    body('durationMinutes').optional().isInt({ min: 15, max: 240 }),
+    body('description').optional().trim().isLength({ min: 2, max: 500 }),
+    body('timezone').optional().trim().notEmpty(),
+    body('isActive').optional().isBoolean(),
+    body('slots').optional().isArray({ min: 1, max: 16 }),
+    body('blockedDates').optional().isArray({ max: 60 }),
+  ],
+  async (req, res) => {
+    if (!validate(req, res)) {
+      return;
+    }
+
+    try {
+      const existing = await SessionBookingConfig.findOne().sort({ updatedAt: -1 });
+      const current = buildBookingSettingsResponse(existing);
+
+      const requestedSlots = Array.isArray(req.body.slots) ? req.body.slots : current.slots;
+      const normalizedSlots = requestedSlots
+        .map((slot) => ({
+          time: String(slot?.time || '').trim(),
+          label: String(slot?.label || normalizeTimeToLabel(slot?.time || '')).trim(),
+          capacity: Math.max(Number(slot?.capacity) || 1, 1),
+          isActive: slot?.isActive !== false,
+        }))
+        .filter((slot) => TIME_PATTERN.test(slot.time));
+
+      if (normalizedSlots.length === 0) {
+        return res.status(400).json({ message: 'At least one valid slot is required' });
+      }
+
+      const uniqueSlotTimes = new Set(normalizedSlots.map((slot) => slot.time));
+      if (uniqueSlotTimes.size !== normalizedSlots.length) {
+        return res.status(400).json({ message: 'Slot times must be unique' });
+      }
+
+      const requestedBlockedDates = Array.isArray(req.body.blockedDates)
+        ? req.body.blockedDates
+        : current.blockedDates;
+
+      const normalizedBlockedDates = Array.from(new Set(
+        requestedBlockedDates
+          .map((entry) => String(entry || '').trim())
+          .filter((entry) => entry.length > 0)
+      )).sort();
+
+      if (normalizedBlockedDates.some((entry) => !isValidDateString(entry))) {
+        return res.status(400).json({ message: 'blockedDates must contain only YYYY-MM-DD values' });
+      }
+
+      const payload = {
+        isActive: typeof req.body.isActive === 'boolean' ? req.body.isActive : current.isActive,
+        sessionName: String(req.body.sessionName || current.sessionName).trim(),
+        durationMinutes: Number(req.body.durationMinutes || current.durationMinutes),
+        description: String(req.body.description || current.description).trim(),
+        timezone: String(req.body.timezone || current.timezone).trim(),
+        slots: normalizedSlots.sort((a, b) => a.time.localeCompare(b.time)),
+        blockedDates: normalizedBlockedDates,
+        updatedBy: req.user._id,
+      };
+
+      const config = await SessionBookingConfig.findOneAndUpdate(
+        {},
+        { $set: payload },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+
+      return res.status(200).json({ config: buildBookingSettingsResponse(config) });
+    } catch (error) {
+      console.error('Admin session booking settings update error:', error);
+      return res.status(500).json({ message: 'Unable to update booking settings' });
+    }
+  }
+);
+
+router.get('/session-bookings', async (req, res) => {
+  try {
+    const bookings = await WorkoutSessionBooking.find({ status: 'booked' })
+      .populate('user', 'name email')
+      .sort({ bookingDate: 1, slotTime: 1 })
+      .lean();
+    return res.status(200).json({ bookings });
+  } catch (error) {
+    console.error('Admin session bookings list error:', error);
+    return res.status(500).json({ message: 'Unable to load bookings' });
+  }
+});
 
 router.get('/overview', async (req, res) => {
   try {

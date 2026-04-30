@@ -208,6 +208,199 @@
   padding-top: 1rem;
 }
 
+.admin-session-booking-section {
+  margin-top: 1rem;
+  border-top: 1px solid rgba(245, 166, 35, 0.24);
+  padding-top: 1rem;
+}
+
+.admin-session-booking-card {
+  border: 1px solid rgba(245, 166, 35, 0.26);
+  border-radius: 12px;
+  padding: 0.8rem;
+  background: rgba(8, 17, 29, 0.95);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-session-grid-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.admin-session-slots-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+.admin-session-slots-head h4 {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #f5c96f;
+  font-size: 0.9rem;
+}
+
+.admin-session-slots-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.admin-session-slot-item {
+  border: 1px dashed rgba(245, 166, 35, 0.33);
+  border-radius: 10px;
+  padding: 0.6rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr 120px auto auto;
+  gap: 0.55rem;
+  align-items: end;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.admin-slot-active-toggle {
+  margin-bottom: 0.45rem;
+}
+
+.admin-blocked-dates-add {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.admin-blocked-dates-add input {
+  border: 1px solid rgba(245, 166, 35, 0.32);
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: rgba(8, 17, 29, 0.95);
+  color: #eef5ff;
+}
+
+.admin-blocked-dates-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-blocked-date-chip {
+  border: 1px solid rgba(245, 166, 35, 0.36);
+  background: rgba(245, 166, 35, 0.11);
+  color: #ffd796;
+  border-radius: 999px;
+  padding: 0.28rem 0.62rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+}
+
+.admin-blocked-date-empty {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.admin-booking-summary-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.admin-booking-status-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.2rem 0.65rem;
+  border-radius: 20px;
+}
+
+.admin-booking-status-badge.badge--on {
+  background: rgba(77, 217, 172, 0.15);
+  color: #4dd9ac;
+  border: 1px solid rgba(77, 217, 172, 0.35);
+}
+
+.admin-booking-status-badge.badge--off {
+  background: rgba(255, 100, 100, 0.12);
+  color: #ff7070;
+  border: 1px solid rgba(255, 100, 100, 0.3);
+}
+
+.admin-booking-slots-count {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── Booked Sessions List ── */
+.admin-bookings-list-section {
+  margin-bottom: 1.25rem;
+}
+
+.admin-bookings-empty {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 0.5rem 0;
+}
+
+.admin-bookings-table-wrap {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(126, 205, 214, 0.18);
+}
+
+.admin-bookings-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.admin-bookings-table thead tr {
+  background: rgba(126, 205, 214, 0.08);
+}
+
+.admin-bookings-table th {
+  text-align: left;
+  padding: 0.6rem 0.9rem;
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid rgba(126, 205, 214, 0.15);
+}
+
+.admin-bookings-table td {
+  padding: 0.55rem 0.9rem;
+  color: rgba(255, 255, 255, 0.82);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: middle;
+}
+
+.admin-bookings-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-booking-row--today td {
+  background: rgba(245, 166, 35, 0.07);
+}
+
+.admin-booking-today-badge {
+  display: inline-block;
+  margin-left: 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: rgba(245, 166, 35, 0.18);
+  color: #f5a623;
+  border: 1px solid rgba(245, 166, 35, 0.4);
+  border-radius: 20px;
+  padding: 0.05rem 0.45rem;
+  vertical-align: middle;
+}
+
 .admin-live-meet-card {
   border: 1px solid rgba(126, 205, 214, 0.24);
   border-radius: 12px;
@@ -613,6 +806,9 @@
 .admin-primary-button,
 .admin-secondary-button,
 .admin-danger-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   border-radius: 10px;
   border: 0;
   padding: 0.55rem 0.85rem;
@@ -757,6 +953,16 @@
   place-items: center;
   padding: 1rem;
   z-index: 50;
+}
+
+@media (max-width: 960px) {
+  .admin-session-slot-item {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-session-grid-two {
+    grid-template-columns: 1fr;
+  }
 }
 
 .admin-plan-modal {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { userAPI } from '../services/api';
 import toast from 'react-hot-toast';
@@ -99,7 +100,7 @@ const cardVariants = {
 
 const quickAccessLinks = {
   funnelPage: 'https://app.gohighlevel.com/v2/preview/Rhn10FQVnvw9fLDvyPBZ?notrack=true',
-  classSchedule: 'https://api.leadconnectorhq.com/widget/bookings/twc-session-sign-up',
+  classSchedule: '/book-session',
 };
 
 const getDefaultWorkoutDayIndex = (workoutPlan) => {
@@ -414,15 +415,13 @@ const Dashboard = () => {
             <div className="quick-access-chip">Live Booking</div>
             <h3>Book Your Meet Session</h3>
             <p>Reserve your class slot instantly and lock your next training session.</p>
-            <a
+            <Link
               className="quick-access-cta"
-              href={quickAccessLinks.classSchedule}
-              target="_blank"
-              rel="noopener noreferrer"
+              to={quickAccessLinks.classSchedule}
             >
               Book Class Schedule
-              <ExternalLink size={15} />
-            </a>
+              <Calendar size={15} />
+            </Link>
           </article>
 
           <article className="quick-access-card quick-access-offers">

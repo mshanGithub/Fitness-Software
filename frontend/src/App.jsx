@@ -10,6 +10,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import Dashboard from './pages/Dashboard';
+import BookSession from './pages/BookSession';
 
 function AppRoutes() {
   const { isAuthenticated, isAdmin } = useAuth();
@@ -27,6 +28,14 @@ function AppRoutes() {
         element={
           <PrivateRoute allowedRoles={['user']} redirectTo="/login">
             <Dashboard />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/book-session"
+        element={
+          <PrivateRoute allowedRoles={['user']} redirectTo="/login">
+            <BookSession />
           </PrivateRoute>
         }
       />
