@@ -1,16 +1,11 @@
 /**
  * Google Calendar API integration for session booking events.
  *
- * Required env variables:
- *   GOOGLE_SERVICE_ACCOUNT_JSON  — full JSON string of the service account key file
- *   GOOGLE_CALENDAR_ID           — calendar ID to create events on
- *                                  (usually admin's email, e.g. admin@gmail.com)
- *
- * Setup steps:
- *  1. Go to https://console.cloud.google.com → create a project → enable "Google Calendar API"
- *  2. Create a Service Account → download JSON key → paste full JSON as GOOGLE_SERVICE_ACCOUNT_JSON
- *  3. Open Google Calendar → share your calendar with the service account email (give "Make changes to events" permission)
- *  4. Set GOOGLE_CALENDAR_ID to your Google Calendar email/ID
+ * Required env variables (OAuth2):
+ *   GOOGLE_OAUTH_CLIENT_ID       — OAuth2 client ID
+ *   GOOGLE_OAUTH_CLIENT_SECRET   — OAuth2 client secret
+ *   GOOGLE_OAUTH_REFRESH_TOKEN   — long-lived refresh token (from setupOAuth2.js)
+ *   GOOGLE_CALENDAR_ID           — calendar ID, use "primary" for main Gmail calendar
  */
 
 const { google } = require('googleapis');
@@ -20,19 +15,19 @@ let _calendarClient = null;
 function getCalendarClient() {
   if (_calendarClient) return _calendarClient;
 
-  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
-  if (!raw) return null;
+  const clientId     = process.env.GOOGLE_OAUTH_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_OAUTH_REFRESH_TOKEN;
+
+  if (!clientId || !clientSecret || !refreshToken) return null;
 
   try {
-    const credentials = JSON.parse(raw);
-    const auth = new google.auth.GoogleAuth({
-      credentials,
-      scopes: ['https://www.googleapis.com/auth/calendar'],
-    });
-    _calendarClient = google.calendar({ version: 'v3', auth });
+    const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, 'http://localhost:3000/oauth2callback');
+    oauth2Client.setCredentials({ refresh_token: refreshToken });
+    _calendarClient = google.calendar({ version: 'v3', auth: oauth2Client });
     return _calendarClient;
   } catch (err) {
-    console.error('[GoogleCalendar] Failed to initialise client:', err.message);
+    console.error('[GoogleCalendar] Failed to initialise OAuth2 client:', err.message);
     return null;
   }
 }
